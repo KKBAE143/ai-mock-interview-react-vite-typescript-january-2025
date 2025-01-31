@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Code2,
   BookOpen,
@@ -18,33 +20,67 @@ import {
   Users,
   Award,
   ExternalLink,
+  Terminal,
+  Database,
+  Cloud,
+  Layout,
+  Search,
+  Layers,
+  Settings,
+  BookMarked,
+  Cpu,
+  Network,
 } from "lucide-react";
 import { chatSession } from "@/scripts";
 import { toast } from "sonner";
 import { fetchCertifications, getProviderLogo, getProviderColor } from "@/lib/certifications";
 
-interface TechStack {
-  technology: string;
+interface TechnologyDetails {
+  name: string;
+  version?: string;
+  category: "Frontend" | "Backend" | "DevOps" | "Database" | "Cloud" | "Tools";
   proficiency: number;
   importance: "High" | "Medium" | "Low";
-  resources: string[];
+  resources: {
+    title: string;
+    url: string;
+    type: "Documentation" | "Tutorial" | "Course" | "Article";
+  }[];
+  description: string;
 }
 
-interface SkillAssessment {
+interface SkillDetails {
+  name: string;
+  level: number;
+  importance: "High" | "Medium" | "Low";
   category: string;
-  skills: {
-    name: string;
-    level: number;
-    importance: "High" | "Medium" | "Low";
+  timeToAcquire: string;
+  dependencies: string[];
+  learningPath: {
+    stage: string;
+    resources: string[];
+    duration: string;
   }[];
 }
 
-interface ProjectSuggestion {
+interface ProjectDetails {
   title: string;
   description: string;
   skills: string[];
   difficulty: "Beginner" | "Intermediate" | "Advanced";
   timeEstimate: string;
+  objectives: string[];
+  implementation: {
+    steps: string[];
+    codeExamples: string[];
+    bestPractices: string[];
+  };
+  githubExample?: string;
+  resources: {
+    title: string;
+    url: string;
+    type: "Tutorial" | "Documentation" | "Video" | "Article";
+  }[];
 }
 
 interface RolePreparationProps {
@@ -54,13 +90,12 @@ interface RolePreparationProps {
 }
 
 export function RolePreparation({ companyName, role, industry }: RolePreparationProps) {
-  const [techStack, setTechStack] = useState<TechStack[]>([]);
-  const [certifications, setCertifications] = useState<any[]>([]);
-  const [skillAssessments, setSkillAssessments] = useState<SkillAssessment[]>([]);
-  const [projects, setProjects] = useState<ProjectSuggestion[]>([]);
+  const [techStack, setTechStack] = useState<TechnologyDetails[]>([]);
+  const [skillAssessments, setSkillAssessments] = useState<SkillDetails[]>([]);
+  const [projects, setProjects] = useState<ProjectDetails[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string>("Frontend");
   const [loading, setLoading] = useState({
     tech: false,
-    certs: false,
     skills: false,
     projects: false,
   });
@@ -72,22 +107,30 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
   const fetchRoleData = async () => {
     setLoading({
       tech: true,
-      certs: true,
       skills: true,
       projects: true,
     });
 
     try {
-      // Fetch technical stack requirements
+      // Fetch technical stack requirements with enhanced details
       const techPrompt = `
-        Generate technical stack requirements for ${role} at ${companyName} in this JSON format:
+        Generate detailed technical stack requirements for ${role} at ${companyName} in this JSON format:
         {
-          "techStack": [
+          "technologies": [
             {
-              "technology": "Technology name",
+              "name": "Technology name",
+              "version": "Version requirement",
+              "category": "Frontend/Backend/DevOps/Database/Cloud/Tools",
               "proficiency": 85,
-              "importance": "High",
-              "resources": ["Learning resource URL or description"]
+              "importance": "High/Medium/Low",
+              "resources": [
+                {
+                  "title": "Resource title",
+                  "url": "Resource URL",
+                  "type": "Documentation/Tutorial/Course/Article"
+                }
+              ],
+              "description": "Detailed description of technology usage"
             }
           ]
         }
@@ -95,26 +138,26 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
 
       const techResult = await chatSession.sendMessage(techPrompt);
       const techData = JSON.parse(techResult.response.text().match(/\{[\s\S]*\}/)[0]);
-      setTechStack(techData.techStack);
+      setTechStack(techData.technologies);
       setLoading(prev => ({ ...prev, tech: false }));
 
-      // Fetch certifications using the enhanced system
-      const certificationData = await fetchCertifications(role);
-      setCertifications(certificationData);
-      setLoading(prev => ({ ...prev, certs: false }));
-
-      // Fetch skill assessments
+      // Fetch detailed skill requirements
       const skillsPrompt = `
-        Generate skill requirements for ${role} at ${companyName} in this JSON format:
+        Generate detailed skill requirements for ${role} at ${companyName} in this JSON format:
         {
-          "skillAssessments": [
+          "skills": [
             {
+              "name": "Skill name",
+              "level": 80,
+              "importance": "High/Medium/Low",
               "category": "Category name",
-              "skills": [
+              "timeToAcquire": "Estimated time",
+              "dependencies": ["Required prerequisite skills"],
+              "learningPath": [
                 {
-                  "name": "Skill name",
-                  "level": 80,
-                  "importance": "High"
+                  "stage": "Stage name",
+                  "resources": ["Learning resources"],
+                  "duration": "Stage duration"
                 }
               ]
             }
@@ -124,20 +167,34 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
 
       const skillsResult = await chatSession.sendMessage(skillsPrompt);
       const skillsData = JSON.parse(skillsResult.response.text().match(/\{[\s\S]*\}/)[0]);
-      setSkillAssessments(skillsData.skillAssessments);
+      setSkillAssessments(skillsData.skills);
       setLoading(prev => ({ ...prev, skills: false }));
 
-      // Fetch project suggestions
+      // Fetch detailed project suggestions
       const projectsPrompt = `
-        Generate project suggestions for ${role} at ${companyName} in this JSON format:
+        Generate detailed project suggestions for ${role} at ${companyName} in this JSON format:
         {
           "projects": [
             {
               "title": "Project title",
               "description": "Project description",
               "skills": ["Required skills"],
-              "difficulty": "Intermediate",
-              "timeEstimate": "2-3 weeks"
+              "difficulty": "Beginner/Intermediate/Advanced",
+              "timeEstimate": "Time estimate",
+              "objectives": ["Learning objectives"],
+              "implementation": {
+                "steps": ["Implementation steps"],
+                "codeExamples": ["Code examples"],
+                "bestPractices": ["Best practices"]
+              },
+              "githubExample": "GitHub repository URL",
+              "resources": [
+                {
+                  "title": "Resource title",
+                  "url": "Resource URL",
+                  "type": "Tutorial/Documentation/Video/Article"
+                }
+              ]
             }
           ]
         }
@@ -153,10 +210,28 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
       toast.error("Failed to fetch role preparation data");
       setLoading({
         tech: false,
-        certs: false,
         skills: false,
         projects: false,
       });
+    }
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "Frontend":
+        return <Layout className="w-4 h-4" />;
+      case "Backend":
+        return <Terminal className="w-4 h-4" />;
+      case "Database":
+        return <Database className="w-4 h-4" />;
+      case "DevOps":
+        return <Settings className="w-4 h-4" />;
+      case "Cloud":
+        return <Cloud className="w-4 h-4" />;
+      case "Tools":
+        return <Layers className="w-4 h-4" />;
+      default:
+        return <Code2 className="w-4 h-4" />;
     }
   };
 
@@ -167,19 +242,6 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
       case "Medium":
         return "bg-yellow-100 text-yellow-800";
       case "Low":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case "Advanced":
-        return "bg-red-100 text-red-800";
-      case "Intermediate":
-        return "bg-yellow-100 text-yellow-800";
-      case "Beginner":
         return "bg-green-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -200,235 +262,114 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
   };
 
   return (
-    <div className="grid md:grid-cols-2 gap-6">
-      {/* Technical Stack */}
+    <div className="space-y-6">
+      {/* Technical Stack Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Code2 className="w-5 h-5" />
             Technical Stack
           </CardTitle>
+          <CardDescription>
+            Required technologies and proficiency levels for the role
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {loading.tech ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-2 bg-gray-200 rounded w-full"></div>
-                </div>
+        <CardContent>
+          <Tabs defaultValue="Frontend" className="w-full">
+            <TabsList className="grid grid-cols-6 mb-4">
+              {["Frontend", "Backend", "Database", "DevOps", "Cloud", "Tools"].map((category) => (
+                <TabsTrigger
+                  key={category}
+                  value={category}
+                  className="flex items-center gap-2"
+                  onClick={() => setActiveCategory(category)}
+                >
+                  {getCategoryIcon(category)}
+                  {category}
+                </TabsTrigger>
               ))}
-            </div>
-          ) : techStack.length > 0 ? (
-            techStack.map((tech, index) => (
-              <div key={index} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="font-medium">{tech.technology}</div>
-                  <Badge className={getImportanceColor(tech.importance)}>
-                    {tech.importance}
-                  </Badge>
-                </div>
-                <Progress value={tech.proficiency} className="h-2" />
-                <div className="text-sm text-muted-foreground">
-                  Resources:
-                  <ul className="list-disc list-inside mt-1">
-                    {tech.resources.map((resource, i) => (
-                      <li key={i}>{resource}</li>
+            </TabsList>
+            {["Frontend", "Backend", "Database", "DevOps", "Cloud", "Tools"].map((category) => (
+              <TabsContent key={category} value={category} className="space-y-6">
+                {loading.tech ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="animate-pulse">
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-2 bg-gray-200 rounded w-full"></div>
+                      </div>
                     ))}
-                  </ul>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-6 text-muted-foreground">
-              No technical stack data available
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Certifications */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="w-5 h-5" />
-            Recommended Certifications
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          {loading.certs ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-32 bg-gray-200 rounded w-full"></div>
-                </div>
-              ))}
-            </div>
-          ) : certifications.length > 0 ? (
-            certifications.map((category, categoryIndex) => (
-              <div key={categoryIndex} className="space-y-4">
-                <div className="border-b pb-2">
-                  <h3 className="font-medium text-lg">{category.title}</h3>
-                  <p className="text-sm text-muted-foreground">{category.description}</p>
-                </div>
-                <div className="grid gap-6">
-                  {category.certifications.map((cert, certIndex) => (
-                    <div
-                      key={certIndex}
-                      className={`relative group rounded-lg border p-6 hover:border-primary transition-all duration-300 hover:shadow-lg ${
-                        cert.featured ? 'border-primary/50 bg-primary/5' : ''
-                      }`}
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h4 className="font-medium group-hover:text-primary transition-colors flex items-center gap-2">
-                            {cert.title}
-                            {cert.featured && (
-                              <Badge variant="secondary" className="text-xs">
-                                Featured
-                              </Badge>
-                            )}
-                          </h4>
-                          <div className="flex items-center gap-2 mt-2">
-                            <div 
-                              className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-300 shadow-sm relative"
-                              style={{ 
-                                backgroundColor: getProviderColor(cert.provider),
-                                transform: 'translateZ(0)'
-                              }}
-                            >
-                              {getProviderLogo(cert.provider) ? (
-                                <img
-                                  src={getProviderLogo(cert.provider)}
-                                  alt={cert.provider}
-                                  className="w-5 h-5 object-contain transition-transform duration-300 group-hover:scale-110"
-                                  style={{ 
-                                    filter: [
-                                      "Oracle", 
-                                      "FreeCodeCamp", 
-                                      "Frontend Masters", 
-                                      "DataCamp"
-                                    ].includes(cert.provider) ? "invert(1)" : "none",
-                                    objectFit: "contain",
-                                    maxWidth: "100%",
-                                    maxHeight: "100%"
-                                  }}
-                                />
-                              ) : (
-                                <span className="text-sm font-bold text-white">
-                                  {cert.provider.charAt(0)}
-                                </span>
-                              )}
-                              <div 
-                                className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"
-                                aria-hidden="true"
-                              />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium group-hover:text-primary transition-colors">
-                                {cert.provider}
-                              </span>
-                              {cert.badge && (
-                                <span className="text-xs text-muted-foreground">
-                                  {cert.badge}
-                                </span>
+                  </div>
+                ) : (
+                  techStack
+                    .filter((tech) => tech.category === category)
+                    .map((tech, index) => (
+                      <div key={index} className="space-y-4 p-4 border rounded-lg hover:border-primary transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-medium">{tech.name}</h4>
+                              {tech.version && (
+                                <Badge variant="secondary" className="text-xs">
+                                  v{tech.version}
+                                </Badge>
                               )}
                             </div>
+                            <p className="text-sm text-muted-foreground">{tech.description}</p>
                           </div>
-                        </div>
-                        <Badge 
-                          className={`${getLevelColor(cert.level)} transition-transform duration-300 group-hover:scale-105`}
-                        >
-                          {cert.level}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-4 group-hover:text-muted-foreground/80 transition-colors">
-                        {cert.description}
-                      </p>
-                      <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                        <div className="flex items-center gap-2 group-hover:text-primary transition-colors">
-                          <Clock className="w-4 h-4 text-muted-foreground" />
-                          <span>{cert.duration}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-muted-foreground" />
-                          <span>{cert.enrolled}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                          <span>{cert.rating.toFixed(1)}</span>
-                        </div>
-                        {cert.price && (
-                          <div className="flex items-center gap-2">
-                            <TrendingUp className="w-4 h-4 text-muted-foreground" />
-                            <span>{cert.price}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {cert.skills.map((skill, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="text-xs group-hover:bg-primary/10 transition-colors"
-                          >
-                            {skill}
+                          <Badge className={getImportanceColor(tech.importance)}>
+                            {tech.importance}
                           </Badge>
-                        ))}
-                      </div>
-                      {cert.instructors && (
-                        <div className="flex items-center gap-2 mb-4 text-sm">
-                          <BookOpen className="w-4 h-4 text-muted-foreground" />
-                          <span>{cert.instructors.join(", ")}</span>
                         </div>
-                      )}
-                      <a
-                        href={cert.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="absolute inset-0 rounded-lg ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                      >
-                        <span className="sr-only">View certification</span>
-                      </a>
-                      {cert.badge && (
-                        <div className="absolute top-4 right-4 transform group-hover:scale-110 transition-transform">
-                          <Award className="w-5 h-5 text-primary" />
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Proficiency Required</span>
+                            <span>{tech.proficiency}%</span>
+                          </div>
+                          <Progress value={tech.proficiency} className="h-2" />
                         </div>
-                      )}
-                      <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <ExternalLink className="w-4 h-4 text-primary" />
+                        <div className="space-y-2">
+                          <h5 className="text-sm font-medium">Learning Resources</h5>
+                          <div className="grid gap-2">
+                            {tech.resources.map((resource, i) => (
+                              <a
+                                key={i}
+                                href={resource.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-between p-2 text-sm border rounded hover:bg-primary/5 transition-colors"
+                              >
+                                <div className="flex items-center gap-2">
+                                  {resource.type === "Documentation" && <FileText className="w-4 h-4" />}
+                                  {resource.type === "Tutorial" && <PlayCircle className="w-4 h-4" />}
+                                  {resource.type === "Course" && <BookOpen className="w-4 h-4" />}
+                                  {resource.type === "Article" && <BookMarked className="w-4 h-4" />}
+                                  <span>{resource.title}</span>
+                                </div>
+                                <ExternalLink className="w-4 h-4" />
+                              </a>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-8">
-              <div className="mb-4">
-                <GraduationCap className="w-12 h-12 text-muted-foreground mx-auto" />
-              </div>
-              <h3 className="text-lg font-medium mb-2">No Certifications Found</h3>
-              <p className="text-muted-foreground mb-4">
-                We couldn't find any recommended certifications at the moment.
-              </p>
-              <Button onClick={fetchRoleData} variant="outline" className="gap-2">
-                <GraduationCap className="w-4 h-4" />
-                Retry Loading Data
-              </Button>
-            </div>
-          )}
+                    ))
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
         </CardContent>
       </Card>
 
-      {/* Skill Assessments */}
+      {/* Skill Requirements Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="w-5 h-5" />
             Skill Requirements
           </CardTitle>
+          <CardDescription>
+            Core competencies and learning paths for the role
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {loading.skills ? (
@@ -441,21 +382,67 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
               ))}
             </div>
           ) : (
-            skillAssessments.map((category, index) => (
-              <div key={index} className="space-y-4">
-                <h3 className="font-medium">{category.category}</h3>
-                <div className="space-y-3">
-                  {category.skills.map((skill, i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">{skill.name}</span>
-                        <Badge className={getImportanceColor(skill.importance)}>
-                          {skill.importance}
+            skillAssessments.map((skill, index) => (
+              <div key={index} className="space-y-4 p-4 border rounded-lg hover:border-primary transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h4 className="font-medium">{skill.name}</h4>
+                    <p className="text-sm text-muted-foreground">Category: {skill.category}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className={getImportanceColor(skill.importance)}>
+                      {skill.importance}
+                    </Badge>
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {skill.timeToAcquire}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Required Level</span>
+                    <span>{skill.level}%</span>
+                  </div>
+                  <Progress value={skill.level} className="h-2" />
+                </div>
+                {skill.dependencies.length > 0 && (
+                  <div className="space-y-2">
+                    <h5 className="text-sm font-medium">Prerequisites</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {skill.dependencies.map((dep, i) => (
+                        <Badge key={i} variant="secondary">
+                          {dep}
                         </Badge>
-                      </div>
-                      <Progress value={skill.level} className="h-2" />
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <h5 className="text-sm font-medium">Learning Path</h5>
+                  <div className="space-y-3">
+                    {skill.learningPath.map((stage, i) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 font-medium text-sm">
+                          {i + 1}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h6 className="font-medium text-sm">{stage.stage}</h6>
+                            <span className="text-xs text-muted-foreground">{stage.duration}</span>
+                          </div>
+                          <ul className="mt-1 space-y-1">
+                            {stage.resources.map((resource, j) => (
+                              <li key={j} className="text-sm text-muted-foreground flex items-center gap-2">
+                                <CheckCircle2 className="w-3 h-3" />
+                                {resource}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))
@@ -463,13 +450,16 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
         </CardContent>
       </Card>
 
-      {/* Project Suggestions */}
+      {/* Project Suggestions Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <GitBranch className="w-5 h-5" />
             Project Portfolio Suggestions
           </CardTitle>
+          <CardDescription>
+            Recommended projects to demonstrate your skills
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {loading.projects ? (
@@ -483,26 +473,113 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
             </div>
           ) : (
             projects.map((project, index) => (
-              <div key={index} className="border-b last:border-0 pb-4 last:pb-0">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium">{project.title}</h3>
+              <div key={index} className="space-y-4 p-4 border rounded-lg hover:border-primary transition-colors">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">{project.title}</h4>
                   <Badge className={getDifficultyColor(project.difficulty)}>
                     {project.difficulty}
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {project.description}
-                </p>
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    {project.skills.map((skill, i) => (
-                      <Badge key={i} variant="outline">
-                        {skill}
-                      </Badge>
-                    ))}
+                <p className="text-sm text-muted-foreground">{project.description}</p>
+                <div className="grid gap-4">
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Learning Objectives</h5>
+                    <ul className="space-y-1">
+                      {project.objectives.map((objective, i) => (
+                        <li key={i} className="text-sm text-muted-foreground flex items-center gap-2">
+                          <CheckCircle2 className="w-3 h-3" />
+                          {objective}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Required Skills</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {project.skills.map((skill, i) => (
+                        <Badge key={i} variant="outline">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Implementation Guide</h5>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        {project.implementation.steps.map((step, i) => (
+                          <div key={i} className="flex items-start gap-3">
+                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 font-medium text-sm">
+                              {i + 1}
+                            </div>
+                            <p className="text-sm text-muted-foreground flex-1">{step}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {project.implementation.codeExamples.length > 0 && (
+                        <div className="space-y-2">
+                          <h6 className="text-sm font-medium">Code Examples</h6>
+                          <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                            <pre className="text-sm">
+                              {project.implementation.codeExamples.join("\n\n")}
+                            </pre>
+                          </ScrollArea>
+                        </div>
+                      )}
+                      {project.implementation.bestPractices.length > 0 && (
+                        <div className="space-y-2">
+                          <h6 className="text-sm font-medium">Best Practices</h6>
+                          <ul className="space-y-1">
+                            {project.implementation.bestPractices.map((practice, i) => (
+                              <li key={i} className="text-sm text-muted-foreground flex items-center gap-2">
+                                <Star className="w-3 h-3" />
+                                {practice}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {project.githubExample && (
+                    <a
+                      href={project.githubExample}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-2 text-sm border rounded hover:bg-primary/5 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <GitBranch className="w-4 h-4" />
+                        <span>View Example Repository</span>
+                      </div>
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Additional Resources</h5>
+                    <div className="grid gap-2">
+                      {project.resources.map((resource, i) => (
+                        <a
+                          key={i}
+                          href={resource.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 text-sm border rounded hover:bg-primary/5 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            {resource.type === "Documentation" && <FileText className="w-4 h-4" />}
+                            {resource.type === "Tutorial" && <PlayCircle className="w-4 h-4" />}
+                            {resource.type === "Video" && <PlayCircle className="w-4 h-4" />}
+                            {resource.type === "Article" && <BookMarked className="w-4 h-4" />}
+                            <span>{resource.title}</span>
+                          </div>
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      ))}
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Estimated time: {project.timeEstimate}
+                    Estimated completion time: {project.timeEstimate}
                   </p>
                 </div>
               </div>
