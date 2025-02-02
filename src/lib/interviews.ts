@@ -628,7 +628,7 @@ export async function fetchInterviewExperiences(companyName: string, jobRole: st
 
     // Return default experiences if AI generation fails
     return defaultExperiences;
-    
+
   } catch (error) {
     console.error("Error fetching interview experiences:", error);
     return baseInterviewData[jobRole] || [];
