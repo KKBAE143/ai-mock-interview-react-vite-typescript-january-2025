@@ -430,45 +430,324 @@ function generateInterviewRounds(role: string, companyTier: string): string[] {
 
 export async function fetchInterviewExperiences(companyName: string, jobRole: string): Promise<InterviewExperience[]> {
   try {
-    // First check if we have base data for this role
+    const companyTier = determineCompanyTier(companyName);
     const roleSpecificData = baseInterviewData[jobRole] || [];
     
-    // Generate AI response for role-specific experiences
+    // Generate multiple experiences with different difficulties and outcomes
+    const defaultExperiences: InterviewExperience[] = [
+      {
+        role: jobRole,
+        date: new Date().toISOString(),
+        difficulty: "Medium",
+        outcome: "Accepted",
+        location: "Bangalore",
+        experience: "3-5 years",
+        rating: 4,
+        interviewProcess: [
+          {
+            stage: "Initial Screening",
+            description: "HR discussion about your background and role expectations",
+            duration: "30 minutes",
+            focus: [
+              "Resume walkthrough",
+              "Basic qualification verification",
+              "Initial salary expectations",
+              "Notice period discussion"
+            ],
+            tips: [
+              `Prepare a 2-minute pitch about your ${jobRole} experience`,
+              "Have your portfolio/GitHub ready to share",
+              "Research current salary trends",
+              "Be ready to discuss your notice period"
+            ]
+          },
+          {
+            stage: "Technical Assessment",
+            description: `Online coding assessment focusing on ${jobRole} skills`,
+            duration: "2 hours",
+            focus: [
+              "Data Structures & Algorithms",
+              "Problem-solving skills",
+              "Technical knowledge",
+              "Code quality and optimization"
+            ],
+            tips: [
+              "Practice coding challenges",
+              "Focus on time complexity",
+              "Write clean, documented code",
+              "Test edge cases"
+            ]
+          },
+          {
+            stage: "Technical Discussion",
+            description: "Deep dive into technical skills and experience",
+            duration: "1 hour",
+            focus: [
+              "Previous project discussions",
+              "System design concepts",
+              "Technical decision making",
+              "Best practices and patterns"
+            ],
+            tips: [
+              "Prepare to explain your past projects",
+              "Review system design fundamentals",
+              "Be ready to discuss trade-offs",
+              "Have examples of technical challenges you've solved"
+            ]
+          },
+          {
+            stage: "Hiring Manager Round",
+            description: "Discussion about team fit and goals",
+            duration: "45 minutes",
+            focus: [
+              "Team collaboration",
+              "Problem-solving approach",
+              "Career aspirations",
+              "Cultural fit"
+            ],
+            tips: [
+              "Research the company's culture",
+              "Prepare questions about team structure",
+              "Have examples of teamwork ready",
+              "Show enthusiasm for learning"
+            ]
+          }
+        ],
+        technicalQuestions: generateTechnicalQuestions(jobRole, "Medium"),
+        behavioralQuestions: [
+          {
+            category: "Problem Solving",
+            question: "Describe a challenging project you completed recently",
+            purpose: "Assess problem-solving abilities",
+            exampleResponse: "Use STAR method to explain a relevant project focusing on technical challenges and solutions"
+          },
+          {
+            category: "Leadership",
+            question: "Tell me about a time you led a technical initiative",
+            purpose: "Evaluate leadership potential",
+            exampleResponse: "Discuss project leadership, team coordination, and successful delivery"
+          },
+          {
+            category: "Communication",
+            question: "How do you explain complex technical concepts to non-technical stakeholders?",
+            purpose: "Assess communication skills",
+            exampleResponse: "Share examples of successful technical communication and documentation"
+          }
+        ],
+        successTips: [
+          {
+            category: "Technical Preparation",
+            tips: [
+              `Study ${jobRole} specific technologies`,
+              "Practice coding problems",
+              "Review system design patterns",
+              "Understand company's tech stack"
+            ],
+            examples: [
+              "Complete relevant certifications",
+              "Build portfolio projects",
+              "Contribute to open source",
+              "Create technical blog posts"
+            ]
+          },
+          {
+            category: "Interview Strategy",
+            tips: [
+              "Use STAR method for behavioral questions",
+              "Prepare code examples beforehand",
+              "Research company thoroughly",
+              "Practice mock interviews"
+            ],
+            examples: [
+              "Document past achievements",
+              "Create technical presentations",
+              "Study company blog posts",
+              "Network with employees"
+            ]
+          }
+        ],
+        companyInsights: {
+          culture: [
+            "Focus on innovation",
+            "Collaborative environment",
+            "Learning and growth opportunities",
+            "Work-life balance"
+          ],
+          values: [
+            "Technical excellence",
+            "Customer focus",
+            "Continuous improvement",
+            "Diversity and inclusion"
+          ],
+          recentAchievements: [
+            "Successful product launches",
+            "Technology modernization",
+            "Market expansion",
+            "Industry recognition"
+          ],
+          techStack: [
+            "Modern tools",
+            "Latest frameworks",
+            "Cloud technologies"
+          ],
+          workStyle: [
+            "Agile methodology",
+            "Regular code reviews",
+            "DevOps practices"
+          ]
+        }
+      },
+      // Add another experience with different difficulty and outcome
+      {
+        ...generateAlternativeExperience(jobRole, "Hard", "Rejected", "Mumbai"),
+      },
+      // Add a third experience with different parameters
+      {
+        ...generateAlternativeExperience(jobRole, "Easy", "Accepted", "Hyderabad"),
+      }
+    ];
+
+    // Try to get AI-generated experiences
     const prompt = `Generate detailed interview experiences for ${jobRole} position at ${companyName}. Include specific technical questions, behavioral questions, and success tips relevant to ${jobRole} role.`;
     
-    const aiResponse = await chatSession(prompt);
-    
-    // Parse and validate AI response
-    let aiExperiences: InterviewExperience[] = [];
     try {
-      aiExperiences = JSON.parse(aiResponse);
+      const result = await chatSession.sendMessage(prompt);
+      const responseText = result.response.text();
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsedData = JSON.parse(jsonMatch[0]);
+        const aiExperiences = Array.isArray(parsedData) ? parsedData : [parsedData];
+        return [...defaultExperiences, ...aiExperiences].map(exp => ({
+          ...exp,
+          role: jobRole
+        }));
+      }
     } catch (error) {
       console.error("Failed to parse AI response:", error);
-      // Fallback to base data if AI response parsing fails
-      return roleSpecificData.map(exp => ({
-        ...exp,
-        role: jobRole // Ensure role is set correctly
-      }));
     }
-    
-    // Combine and ensure all experiences have the correct role
-    const combinedExperiences = [...roleSpecificData, ...aiExperiences].map(exp => ({
-      ...exp,
-      role: jobRole // Ensure role is set correctly
-    }));
-    
-    // Filter to ensure only experiences matching the job role are returned
-    return combinedExperiences.filter(exp => 
-      exp.role.toLowerCase() === jobRole.toLowerCase() ||
-      exp.role.toLowerCase().includes(jobRole.toLowerCase()) ||
-      jobRole.toLowerCase().includes(exp.role.toLowerCase())
-    );
+
+    // Return default experiences if AI generation fails
+    return defaultExperiences;
     
   } catch (error) {
     console.error("Error fetching interview experiences:", error);
-    // Return base data as fallback
     return baseInterviewData[jobRole] || [];
   }
+}
+
+function generateTechnicalQuestions(role: string, difficulty: string) {
+  const questions = [
+    {
+      category: "Coding",
+      question: `Implement a complex feature relevant to ${role}`,
+      purpose: "Assess coding skills and problem-solving",
+      exampleAnswer: "Discuss approach, optimization, and testing strategy"
+    },
+    {
+      category: "System Design",
+      question: `Design a scalable system for ${role}-related functionality`,
+      purpose: "Evaluate system design knowledge",
+      exampleAnswer: "Explain architecture, scalability considerations, and trade-offs"
+    },
+    {
+      category: "Architecture",
+      question: `Describe your approach to architecting ${role}-specific solutions`,
+      purpose: "Assess architectural decision-making",
+      exampleAnswer: "Compare different approaches and explain implementation details"
+    },
+    {
+      category: "Domain Knowledge",
+      question: `What are the latest trends and best practices in ${role}?`,
+      purpose: "Evaluate industry awareness",
+      exampleAnswer: "Discuss current technologies, methodologies, and their applications"
+    }
+  ];
+  
+  return questions;
+}
+
+function generateAlternativeExperience(
+  role: string,
+  difficulty: "Easy" | "Medium" | "Hard",
+  outcome: "Accepted" | "Rejected" | "Pending",
+  location: string
+): InterviewExperience {
+  return {
+    role: role,
+    date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    difficulty,
+    outcome,
+    location,
+    experience: `${Math.floor(Math.random() * 5 + 2)}-${Math.floor(Math.random() * 5 + 5)} years`,
+    rating: Math.floor(Math.random() * 2 + 3),
+    interviewProcess: generateInterviewProcess(role, difficulty),
+    technicalQuestions: generateTechnicalQuestions(role, difficulty),
+    behavioralQuestions: generateBehavioralQuestions(),
+    successTips: generateSuccessTips(role),
+    companyInsights: generateCompanyInsights(role)
+  };
+}
+
+function generateInterviewProcess(role: string, difficulty: string) {
+  // Implementation of interview process generation
+  return [
+    {
+      stage: "Initial Screening",
+      description: `HR discussion focusing on ${role} background`,
+      duration: "30 minutes",
+      focus: ["Experience verification", "Role expectations", "Technical background"],
+      tips: ["Prepare role-specific examples", "Research company thoroughly"]
+    },
+    {
+      stage: "Technical Assessment",
+      description: `In-depth ${role} skills evaluation`,
+      duration: "2 hours",
+      focus: ["Technical skills", "Problem-solving", "Code quality"],
+      tips: ["Practice coding challenges", "Review fundamentals"]
+    }
+  ];
+}
+
+function generateBehavioralQuestions() {
+  return [
+    {
+      category: "Problem Solving",
+      question: "Describe a technical challenge you overcame",
+      purpose: "Assess problem-solving approach",
+      exampleResponse: "Use STAR method with technical details"
+    },
+    {
+      category: "Teamwork",
+      question: "How do you handle disagreements in your team?",
+      purpose: "Evaluate collaboration skills",
+      exampleResponse: "Discuss conflict resolution and team dynamics"
+    }
+  ];
+}
+
+function generateSuccessTips(role: string) {
+  return [
+    {
+      category: "Technical Preparation",
+      tips: [`Master ${role} fundamentals`, "Practice coding challenges"],
+      examples: ["Build sample projects", "Contribute to open source"]
+    },
+    {
+      category: "Interview Strategy",
+      tips: ["Research company thoroughly", "Prepare relevant examples"],
+      examples: ["Create project portfolio", "Practice mock interviews"]
+    }
+  ];
+}
+
+function generateCompanyInsights(role: string) {
+  return {
+    culture: ["Innovation-focused", "Learning-oriented", "Collaborative"],
+    values: ["Technical excellence", "Customer focus", "Continuous improvement"],
+    recentAchievements: ["Product launches", "Technical innovations", "Market growth"],
+    techStack: ["Modern tools", "Latest frameworks", "Cloud technologies"],
+    workStyle: ["Agile methodology", "Regular code reviews", "DevOps practices"]
+  };
 }
 
 function determineCompanyTier(companyName: string): string {

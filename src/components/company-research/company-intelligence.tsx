@@ -179,30 +179,47 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
       const newsData = await fetchCompanyNews(companyName);
       setNews(newsData);
       setLoading(prev => ({ ...prev, news: false }));
+    } catch (error) {
+      console.error("Error fetching news:", error);
+      setNews([]);
+      setLoading(prev => ({ ...prev, news: false }));
+      toast.error("Failed to fetch company news");
+    }
 
+    try {
       // Fetch salary data for the entered job role
       const salaryData = await fetchIndianSalaryData(companyName, jobRole, industry);
-      console.log('Fetched salary data:', salaryData);
       setSalaryData(salaryData);
       setLoading(prev => ({ ...prev, salary: false }));
+    } catch (error) {
+      console.error("Error fetching salary data:", error);
+      setSalaryData([]);
+      setLoading(prev => ({ ...prev, salary: false }));
+      toast.error("Failed to fetch salary data");
+    }
 
+    try {
       // Fetch interview experiences for the specific job role
-      const allExperiences = await fetchInterviewExperiences(companyName, jobRole);
-      const roleSpecificExperiences = allExperiences.filter(exp => 
-        exp.role.toLowerCase() === jobRole.toLowerCase()
-      );
-      setExperiences(roleSpecificExperiences);
+      const experiences = await fetchInterviewExperiences(companyName, jobRole);
+      setExperiences(experiences);
       setLoading(prev => ({ ...prev, experiences: false }));
+    } catch (error) {
+      console.error("Error fetching experiences:", error);
+      setExperiences([]);
+      setLoading(prev => ({ ...prev, experiences: false }));
+      toast.error("Failed to fetch interview experiences");
+    }
 
+    try {
       // Fetch certifications
       const certificationData = await fetchCertifications(companyName);
       setCertifications(certificationData);
       setLoading(prev => ({ ...prev, certifications: false }));
-
     } catch (error) {
-      console.error("Error fetching company data:", error);
-      toast.error("Failed to fetch company data");
-      setLoading({ news: false, salary: false, experiences: false, certifications: false });
+      console.error("Error fetching certifications:", error);
+      setCertifications([]);
+      setLoading(prev => ({ ...prev, certifications: false }));
+      toast.error("Failed to fetch certifications");
     }
   };
 
