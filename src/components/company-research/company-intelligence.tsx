@@ -78,6 +78,37 @@ interface InterviewExperience {
   rating?: number;
   location?: string;
   experience?: string;
+  interviewProcess: {
+    stage: string;
+    description: string;
+    duration: string;
+    focus: string[];
+    tips: string[];
+  }[];
+  technicalQuestions: {
+    category: string;
+    question: string;
+    purpose: string;
+    exampleAnswer?: string;
+  }[];
+  behavioralQuestions: {
+    category: string;
+    question: string;
+    purpose: string;
+    exampleResponse?: string;
+  }[];
+  successTips: {
+    category: string;
+    tips: string[];
+    examples: string[];
+  }[];
+  companyInsights: {
+    culture: string[];
+    values: string[];
+    recentAchievements: string[];
+    techStack: string[];
+    workStyle: string[];
+  };
 }
 
 interface CertificationCategory {
@@ -138,10 +169,12 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
       setSalaryData(salaryData);
       setLoading(prev => ({ ...prev, salary: false }));
 
-      // Fetch interview experiences for the job role
-      const experiences = await fetchInterviewExperiences(companyName, jobRole);
-      console.log('Fetched interview experiences:', experiences);
-      setExperiences(experiences);
+      // Fetch interview experiences for the specific job role
+      const allExperiences = await fetchInterviewExperiences(companyName, jobRole);
+      const roleSpecificExperiences = allExperiences.filter(exp => 
+        exp.role.toLowerCase() === jobRole.toLowerCase()
+      );
+      setExperiences(roleSpecificExperiences);
       setLoading(prev => ({ ...prev, experiences: false }));
 
       // Fetch certifications
@@ -489,8 +522,8 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                   <div key={index} className="border-b last:border-0 pb-6 last:pb-0">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h3 className="font-medium flex items-center gap-2">
-                          {exp.role}
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                          {jobRole}
                           {exp.rating && (
                             <span className="flex items-center gap-1 text-yellow-500">
                               <Star className="w-4 h-4 fill-current" />
@@ -498,7 +531,7 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                             </span>
                           )}
                         </h3>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground mt-2">
                           {exp.location && (
                             <span className="flex items-center gap-1">
                               <MapPin className="w-3 h-3" />
@@ -508,7 +541,7 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                           {exp.experience && (
                             <span className="flex items-center gap-1">
                               <Briefcase className="w-3 h-3" />
-                              {exp.experience}
+                              {exp.experience} Experience
                             </span>
                           )}
                           <span className="flex items-center gap-1">
@@ -527,37 +560,168 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                       </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       <div>
-                        <h4 className="text-sm font-medium mb-2">Interview Process</h4>
-                        <div className="space-y-3">
-                          {exp.rounds.map((round, i) => (
-                            <div key={i} className="flex items-start gap-2 text-sm">
-                              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                {i + 1}
+                        <h4 className="text-sm font-medium mb-4">Interview Process</h4>
+                        <div className="space-y-4">
+                          {exp.interviewProcess.map((stage, i) => (
+                            <div key={i} className="border rounded-lg p-4">
+                              <div className="flex items-start gap-3">
+                                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  {i + 1}
+                                </div>
+                                <div className="space-y-2 flex-1">
+                                  <h5 className="font-medium">{stage.stage}</h5>
+                                  <p className="text-sm text-muted-foreground">{stage.description}</p>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Clock className="w-3 h-3" />
+                                    {stage.duration}
+                                  </div>
+                                  <div className="mt-3">
+                                    <h6 className="text-xs font-medium mb-2">Focus Areas:</h6>
+                                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                                      {stage.focus.map((item, j) => (
+                                        <li key={j} className="pl-2">
+                                          <span className="ml-[-1.5rem]">•</span> {item}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                  <div className="mt-3">
+                                    <h6 className="text-xs font-medium mb-2">Tips:</h6>
+                                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                                      {stage.tips.map((tip, j) => (
+                                        <li key={j} className="pl-2">
+                                          <span className="ml-[-1.5rem]">•</span> {tip}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </div>
                               </div>
-                              <span className="text-muted-foreground">{round}</span>
                             </div>
                           ))}
                         </div>
                       </div>
 
                       <div>
-                        <h4 className="text-sm font-medium mb-2">Technical Questions Asked</h4>
-                        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                          {exp.questions.map((question, i) => (
-                            <li key={i}>{question}</li>
+                        <h4 className="text-sm font-medium mb-4">Technical Questions</h4>
+                        <div className="space-y-4">
+                          {exp.technicalQuestions.map((q, i) => (
+                            <div key={i} className="border rounded-lg p-4">
+                              <Badge className="mb-2">{q.category}</Badge>
+                              <h5 className="font-medium mb-2">{q.question}</h5>
+                              <p className="text-sm text-muted-foreground mb-3">{q.purpose}</p>
+                              {q.exampleAnswer && (
+                                <div className="bg-muted p-3 rounded-md">
+                                  <h6 className="text-xs font-medium mb-1">Example Approach:</h6>
+                                  <p className="text-sm text-muted-foreground">{q.exampleAnswer}</p>
+                                </div>
+                              )}
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       </div>
 
                       <div>
-                        <h4 className="text-sm font-medium mb-2">Success Tips</h4>
-                        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                          {exp.tips.map((tip, i) => (
-                            <li key={i}>{tip}</li>
+                        <h4 className="text-sm font-medium mb-4">Behavioral Questions</h4>
+                        <div className="space-y-4">
+                          {exp.behavioralQuestions.map((q, i) => (
+                            <div key={i} className="border rounded-lg p-4">
+                              <Badge className="mb-2">{q.category}</Badge>
+                              <h5 className="font-medium mb-2">{q.question}</h5>
+                              <p className="text-sm text-muted-foreground mb-3">{q.purpose}</p>
+                              {q.exampleResponse && (
+                                <div className="bg-muted p-3 rounded-md">
+                                  <h6 className="text-xs font-medium mb-1">Example Response:</h6>
+                                  <p className="text-sm text-muted-foreground">{q.exampleResponse}</p>
+                                </div>
+                              )}
+                            </div>
                           ))}
-                        </ul>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="text-sm font-medium mb-4">Success Tips</h4>
+                        <div className="space-y-4">
+                          {exp.successTips.map((tip, i) => (
+                            <div key={i} className="border rounded-lg p-4">
+                              <h5 className="font-medium mb-3">{tip.category}</h5>
+                              <div className="space-y-3">
+                                <div>
+                                  <h6 className="text-xs font-medium mb-2">Tips:</h6>
+                                  <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                                    {tip.tips.map((t, j) => (
+                                      <li key={j} className="pl-2">
+                                        <span className="ml-[-1.5rem]">•</span> {t}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                <div>
+                                  <h6 className="text-xs font-medium mb-2">Examples:</h6>
+                                  <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                                    {tip.examples.map((e, j) => (
+                                      <li key={j} className="pl-2">
+                                        <span className="ml-[-1.5rem]">•</span> {e}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="text-sm font-medium mb-4">Company Insights</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="border rounded-lg p-4">
+                            <h5 className="font-medium mb-3">Culture & Values</h5>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                              {exp.companyInsights.culture.map((item, i) => (
+                                <li key={i} className="pl-2">
+                                  <span className="ml-[-1.5rem]">•</span> {item}
+                                </li>
+                              ))}
+                              {exp.companyInsights.values.map((item, i) => (
+                                <li key={i} className="pl-2">
+                                  <span className="ml-[-1.5rem]">•</span> {item}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className="border rounded-lg p-4">
+                            <h5 className="font-medium mb-3">Recent Achievements</h5>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                              {exp.companyInsights.recentAchievements.map((item, i) => (
+                                <li key={i} className="pl-2">
+                                  <span className="ml-[-1.5rem]">•</span> {item}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className="border rounded-lg p-4">
+                            <h5 className="font-medium mb-3">Tech Stack</h5>
+                            <div className="flex flex-wrap gap-2">
+                              {exp.companyInsights.techStack.map((tech, i) => (
+                                <Badge key={i} variant="secondary">{tech}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="border rounded-lg p-4">
+                            <h5 className="font-medium mb-3">Work Style</h5>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                              {exp.companyInsights.workStyle.map((item, i) => (
+                                <li key={i} className="pl-2">
+                                  <span className="ml-[-1.5rem]">•</span> {item}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
