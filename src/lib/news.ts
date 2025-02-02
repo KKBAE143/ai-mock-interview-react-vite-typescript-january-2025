@@ -26,93 +26,175 @@ interface NewsAPIResponse {
   message?: string;
 }
 
+async function fetchFromNewsAPI(companyName: string, apiKey: string): Promise<NewsItem[]> {
+  const today = new Date();
+  // Get news from the last 3 days for more recent coverage
+  const threeDaysAgo = new Date(today);
+  threeDaysAgo.setDate(today.getDate() - 3);
+
+  // First try top-headlines for most recent news
+  const headlinesResponse = await fetch(
+    `https://newsapi.org/v2/top-headlines?` +
+    `q=${encodeURIComponent(companyName)}` +
+    `&language=en` +
+    `&sortBy=publishedAt` +
+    `&pageSize=5` +
+    `&apiKey=${apiKey}`
+  );
+
+  const headlinesData: NewsAPIResponse = await headlinesResponse.json();
+
+  // If we got headlines, use them
+  if (headlinesData.status === 'ok' && headlinesData.articles.length > 0) {
+    return headlinesData.articles.map(article => ({
+      title: article.title,
+      link: article.url,
+      pubDate: article.publishedAt,
+      source: article.source.name,
+      description: article.description || 'No description available'
+    }));
+  }
+
+  // If no headlines, try everything endpoint with recent date filter
+  const response = await fetch(
+    `https://newsapi.org/v2/everything?` +
+    `q=${encodeURIComponent(`${companyName} AND (announcement OR launch OR update OR news)`)}` +
+    `&from=${threeDaysAgo.toISOString().split('T')[0]}` +
+    `&to=${today.toISOString().split('T')[0]}` +
+    `&sortBy=publishedAt` +
+    `&language=en` +
+    `&pageSize=5` +
+    `&apiKey=${apiKey}`
+  );
+
+  const data: NewsAPIResponse = await response.json();
+
+  if (data.status === 'error') {
+    throw new Error(data.message || 'Failed to fetch news');
+  }
+
+  if (data.status === 'ok' && data.articles.length > 0) {
+    return data.articles.map(article => ({
+      title: article.title,
+      link: article.url,
+      pubDate: article.publishedAt,
+      source: article.source.name,
+      description: article.description || 'No description available'
+    }));
+  }
+
+  throw new Error('No recent news found');
+}
+
+async function generateAINews(companyName: string): Promise<NewsItem[]> {
+  const currentDate = new Date().toISOString();
+  const fallbackPrompt = `
+    Generate a JSON array of 5 VERY RECENT (today/yesterday) business news items about ${companyName}. Each news item should have:
+    - A realistic title focusing on very recent developments, product launches, or business updates
+    - A "#" for the link
+    - "${currentDate}" for pubDate (representing today)
+    - "AI Business News" for source
+    - A detailed description focusing on current events and developments
+    
+    Example format:
+    [
+      {
+        "title": "Example title",
+        "link": "#",
+        "pubDate": "${currentDate}",
+        "source": "AI Business News",
+        "description": "Example description"
+      }
+    ]
+
+    Focus on:
+    1. ONLY very recent events (today/yesterday)
+    2. Real business developments and market updates
+    3. Current product launches or announcements
+    4. Recent partnerships or business changes
+    5. Market performance and business metrics
+  `;
+
+  try {
+    const result = await chatSession.sendMessage(fallbackPrompt);
+    console.log('AI Response:', result);
+
+    if (typeof result === 'string') {
+      try {
+        // Try to parse the string response as JSON
+        const parsedNews = JSON.parse(result);
+        if (Array.isArray(parsedNews)) {
+          return parsedNews;
+        }
+        // If it's an object with a news array
+        if (parsedNews.news && Array.isArray(parsedNews.news)) {
+          return parsedNews.news;
+        }
+      } catch (parseError) {
+        console.error('Error parsing AI response:', parseError);
+        // Try to extract JSON from the string using regex
+        const jsonMatch = result.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          const extractedJson = JSON.parse(jsonMatch[0]);
+          if (Array.isArray(extractedJson)) {
+            return extractedJson;
+          }
+        }
+      }
+    } else if (result && typeof result === 'object') {
+      // If it's already a parsed object
+      if (Array.isArray(result)) {
+        return result;
+      }
+      if (result.news && Array.isArray(result.news)) {
+        return result.news;
+      }
+    }
+
+    throw new Error('Invalid AI response format');
+  } catch (error) {
+    console.error('Error generating AI news:', error);
+    // Return a default news item as last resort
+    return [{
+      title: `Latest Updates from ${companyName}`,
+      link: '#',
+      pubDate: new Date().toISOString(),
+      source: 'AI Business News',
+      description: `Stay tuned for the latest updates from ${companyName}. Our AI system is currently processing recent developments and will provide detailed news shortly.`
+    }];
+  }
+}
+
 export async function fetchCompanyNews(companyName: string): Promise<NewsItem[]> {
   try {
     const API_KEY = import.meta.env.VITE_NEWS_API_KEY;
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-    // Check if API key is properly configured
-    if (!API_KEY || API_KEY === 'your_newsapi_key_here') {
-      throw new Error('NewsAPI key not configured. Please follow the setup instructions in the .env file.');
-    }
-
-    const today = new Date();
-    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
-    
-    const response = await fetch(
-      `https://newsapi.org/v2/everything?` +
-      `q=${encodeURIComponent(companyName)}` +
-      `&from=${lastMonth.toISOString().split('T')[0]}` +
-      `&to=${today.toISOString().split('T')[0]}` +
-      `&sortBy=publishedAt` +
-      `&language=en` +
-      `&pageSize=5` +
-      `&apiKey=${API_KEY}`
-    );
-
-    const data: NewsAPIResponse = await response.json();
-
-    // Handle API errors
-    if (data.status === 'error') {
-      if (data.code === 'rateLimited') {
-        throw new Error('NewsAPI rate limit reached. Please try again later.');
-      } else if (data.code === 'apiKeyInvalid') {
-        throw new Error('Invalid NewsAPI key. Please check your configuration.');
-      } else {
-        throw new Error(data.message || 'Failed to fetch news');
+    // Only attempt to fetch from NewsAPI if we're on localhost
+    if (isLocalhost && API_KEY && API_KEY !== 'your_newsapi_key_here') {
+      try {
+        const newsApiResults = await fetchFromNewsAPI(companyName, API_KEY);
+        if (newsApiResults.length > 0) {
+          return newsApiResults;
+        }
+      } catch (apiError) {
+        console.error('Error fetching from NewsAPI:', apiError);
       }
     }
 
-    if (data.status === 'ok' && data.articles.length > 0) {
-      return data.articles.map(article => ({
-        title: article.title,
-        link: article.url,
-        pubDate: article.publishedAt,
-        source: article.source.name,
-        description: article.description || 'No description available'
-      }));
-    }
-
-    // If no articles found, throw error
-    throw new Error(`No recent news found for ${companyName}`);
-
+    // If NewsAPI fails or we're not on localhost, use AI generation
+    console.log('Using AI news generation');
+    return generateAINews(companyName);
   } catch (error) {
-    console.error("Error fetching news:", error);
+    console.error("Error in fetchCompanyNews:", error);
     
-    // If it's a configuration error, show it to the user
-    if (error instanceof Error && 
-        (error.message.includes('API key') || error.message.includes('rate limit'))) {
-      throw error;
-    }
-    
-    // Enhanced fallback to AI-generated news with more current context
-    const fallbackPrompt = `
-      Generate 5 VERY recent news items about ${companyName} that could be from today (${new Date().toISOString().split('T')[0]}) in this JSON format:
-      {
-        "news": [
-          {
-            "title": "Breaking news headline about ${companyName} from today",
-            "link": "#",
-            "pubDate": "${new Date().toISOString()}",
-            "source": "Business News",
-            "description": "Detailed and realistic description of very recent news, mentioning specific current events, products, or developments"
-          }
-        ]
-      }
-      Requirements:
-      1. Use ONLY factual, current information from 2025
-      2. Include recent product launches, business developments, or market trends
-      3. Reference actual current events and real business situations
-      4. Make sure dates are all from this week in 2025
-      5. Keep descriptions detailed and realistic
-    `;
-
-    try {
-      const result = await chatSession.sendMessage(fallbackPrompt);
-      const fallbackNews = JSON.parse(result.response.text().match(/\{[\s\S]*\}/)[0]);
-      return fallbackNews.news;
-    } catch (fallbackError) {
-      console.error("Error generating fallback news:", fallbackError);
-      throw new Error('Unable to fetch or generate news. Please try again later.');
-    }
+    // Return a default news item as absolute last resort
+    return [{
+      title: `Latest Updates from ${companyName}`,
+      link: '#',
+      pubDate: new Date().toISOString(),
+      source: 'AI Business News',
+      description: `Stay tuned for the latest updates from ${companyName}. Our AI system is currently processing recent developments and will provide detailed news shortly.`
+    }];
   }
 } 

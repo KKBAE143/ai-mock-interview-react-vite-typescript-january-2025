@@ -1,0 +1,75 @@
+.analyticsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.analyticsCard {
+  background-color: var(--background);
+  border-radius: var(--radius);
+  padding: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.analyticsCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin-top: 0.25rem;
+}
+
+.trendChart {
+  margin-top: 1rem;
+  height: 200px;
+  width: 100%;
+}
+
+.performanceList {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.performanceItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  background-color: var(--muted);
+}
+
+.bookmarkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.bookmarkButton:hover {
+  transform: translateY(-1px);
+}
+
+.progressBar {
+  height: 100%;
+  background-color: var(--primary);
+  border-radius: 9999px;
+}
+
+.trendBar {
+  width: 100%;
+  background-color: var(--primary);
+  border-radius: 0.25rem 0.25rem 0 0;
+} 
