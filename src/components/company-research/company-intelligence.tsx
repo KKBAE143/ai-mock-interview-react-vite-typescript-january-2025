@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import {
   LineChart,
   BarChart,
@@ -50,6 +53,9 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
+import { predictSalaryTrends, analyzeSalaryFactors } from '@/lib/gemini-service';
+import type { SalaryInsights } from '../salary-insights/types';
+import { NegotiationHelper } from '@/components/salary-insights/negotiation-helper';
 
 interface CompanyNews {
   title: string;
@@ -166,6 +172,9 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
     experiences: false,
     certifications: false,
   });
+  const [salaryInsights, setSalaryInsights] = useState<SalaryInsights | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [location, setLocation] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCompanyData();
@@ -315,6 +324,30 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
     }
   };
 
+  const handleSalaryPrediction = async () => {
+    try {
+      setIsAnalyzing(true);
+      console.log('Starting salary prediction for:', { role: jobRole, location });
+      
+      const prediction = await predictSalaryTrends({
+        role: jobRole,
+        experience: 0,
+        location: location || 'bangalore',
+        skills: [], // We can enhance this later with actual skills
+      });
+      
+      console.log('Received prediction:', prediction);
+      setSalaryInsights(prediction);
+      
+      toast.success('Successfully fetched salary insights');
+    } catch (error) {
+      console.error('Detailed error in salary prediction:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to fetch salary insights');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="news" className="w-full">
@@ -396,141 +429,194 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
         </TabsContent>
 
         <TabsContent value="salary" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <LineChartIcon className="w-5 h-5" />
-                Indian Salary Insights
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {loading.salary ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="animate-pulse">
-                      <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-                      <div className="h-8 bg-gray-200 rounded w-full"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : salaryData.length > 0 ? (
-                salaryData.map((item, index) => (
-                  <div key={index} className="border-b last:border-0 pb-6 last:pb-0">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-medium text-lg">{item.role}</h3>
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        {getTrendIcon(item.trend)}
-                        Market Trend
-                      </Badge>
-                    </div>
-
-                    {/* Overall Salary Range */}
-                    <div className="space-y-4 mb-6">
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <div className="text-sm text-muted-foreground mb-1">Minimum</div>
-                          <div className="font-semibold flex items-center gap-1">
-                            <IndianRupee className="w-4 h-4" />
-                            {formatSalary(item.minSalary)}
-                          </div>
-                        </div>
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <div className="text-sm text-muted-foreground mb-1">Average</div>
-                          <div className="font-semibold flex items-center gap-1">
-                            <IndianRupee className="w-4 h-4" />
-                            {formatSalary(item.average)}
-                          </div>
-                        </div>
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <div className="text-sm text-muted-foreground mb-1">Maximum</div>
-                          <div className="font-semibold flex items-center gap-1">
-                            <IndianRupee className="w-4 h-4" />
-                            {formatSalary(item.maxSalary)}
-                          </div>
-                        </div>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <LineChartIcon className="w-5 h-5" />
+                  Indian Salary Insights
+                </CardTitle>
+                <CardDescription>
+                  AI-powered salary insights for {jobRole} at {companyName}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {loading.salary ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="animate-pulse">
+                        <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                        <div className="h-8 bg-gray-200 rounded w-full"></div>
                       </div>
-                    </div>
-
-                    {/* Experience-wise Breakdown */}
-                    <div className="mb-6">
-                      <h4 className="text-sm font-medium mb-3">Experience-wise Breakdown</h4>
-                      <div className="space-y-3">
-                        {Object.entries(item.experience).map(([level, range]) => (
-                          <div key={level} className="flex items-center justify-between text-sm">
-                            <span className="capitalize">{level} Level</span>
-                            <span className="flex items-center gap-1">
-                              <IndianRupee className="w-3 h-3" />
-                              {formatSalary(range.min)} - {formatSalary(range.max)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Location Adjustments */}
-                    <div className="mb-6">
-                      <h4 className="text-sm font-medium mb-3">City-wise Adjustments</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {item.location.map((loc) => (
-                          <div key={loc.city} className="flex items-center gap-2 text-sm">
-                            <MapPin className="w-3 h-3" />
-                            <span>{loc.city}:</span>
-                            <span className="text-muted-foreground">{loc.adjustment}%</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Skills Impact */}
-                    <div className="mb-6">
-                      <h4 className="text-sm font-medium mb-3">Skills Premium</h4>
-                      <div className="space-y-2">
-                        {item.skills.map((skill) => (
-                          <div key={skill.name} className="flex items-center justify-between text-sm">
-                            <span>{skill.name}</span>
-                            <Badge variant="outline">+{skill.impact}%</Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Benefits */}
-                    <div className="mb-4">
-                      <h4 className="text-sm font-medium mb-3">Benefits & Perks</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {item.benefits.map((benefit, i) => (
-                          <Badge key={i} variant="secondary" className="text-xs">
-                            {benefit}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-sm text-muted-foreground mt-4">
-                      <Badge className={getDemandColor(item.marketDemand)}>
-                        {item.marketDemand} Market Demand
-                      </Badge>
-                      <span>Last Updated: {new Date(item.lastUpdated).toLocaleDateString()}</span>
-                    </div>
+                    ))}
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <div className="mb-4">
-                    <LineChartIcon className="w-12 h-12 text-muted-foreground mx-auto" />
+                ) : (
+                  <div className="space-y-8">
+                    <div className="flex flex-col gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="location">Location</Label>
+                          <Select 
+                            value={location || ''} 
+                            onValueChange={(value) => setLocation(value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select location" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="bangalore">Bangalore</SelectItem>
+                              <SelectItem value="mumbai">Mumbai</SelectItem>
+                              <SelectItem value="delhi">Delhi NCR</SelectItem>
+                              <SelectItem value="hyderabad">Hyderabad</SelectItem>
+                              <SelectItem value="pune">Pune</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end">
+                        <Button 
+                          onClick={handleSalaryPrediction}
+                          disabled={isAnalyzing || !location}
+                          className="w-full md:w-auto"
+                        >
+                          {isAnalyzing ? (
+                            <>
+                              <span className="animate-spin mr-2">⭮</span>
+                              Analyzing...
+                            </>
+                          ) : (
+                            'Get AI Insights'
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {salaryInsights && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <h4 className="font-medium">Salary Range</h4>
+                          <div className="grid grid-cols-3 gap-4">
+                            <div className="p-4 bg-gray-50 rounded-lg">
+                              <div className="text-sm text-muted-foreground">Minimum</div>
+                              <div className="text-2xl font-bold">
+                                ₹{(salaryInsights.baseData.minimum / 100000).toFixed(2)}L
+                              </div>
+                            </div>
+                            <div className="p-4 bg-gray-50 rounded-lg">
+                              <div className="text-sm text-muted-foreground">Average</div>
+                              <div className="text-2xl font-bold text-primary">
+                                ₹{(salaryInsights.baseData.average / 100000).toFixed(2)}L
+                              </div>
+                            </div>
+                            <div className="p-4 bg-gray-50 rounded-lg">
+                              <div className="text-sm text-muted-foreground">Maximum</div>
+                              <div className="text-2xl font-bold">
+                                ₹{(salaryInsights.baseData.maximum / 100000).toFixed(2)}L
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <h4 className="font-medium">Market Demand</h4>
+                          <div className="p-4 bg-gray-50 rounded-lg">
+                            <div className="text-2xl font-bold mb-2">{salaryInsights.marketDemand}</div>
+                            <Progress 
+                              value={
+                                salaryInsights.marketDemand === 'High' 
+                                  ? 100 
+                                  : salaryInsights.marketDemand === 'Medium' 
+                                  ? 50 
+                                  : 25
+                              } 
+                            />
+                          </div>
+                        </div>
+
+                        <div className="col-span-2">
+                          <h4 className="font-medium mb-4">Experience-wise Breakdown</h4>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span>Entry Level</span>
+                              <span className="flex items-center gap-1">
+                                <IndianRupee className="w-3 h-3" />
+                                {(salaryInsights.experienceLevels.entry.min / 100000).toFixed(2)}L - 
+                                {(salaryInsights.experienceLevels.entry.max / 100000).toFixed(2)}L
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span>Mid Level</span>
+                              <span className="flex items-center gap-1">
+                                <IndianRupee className="w-3 h-3" />
+                                {(salaryInsights.experienceLevels.mid.min / 100000).toFixed(2)}L - 
+                                {(salaryInsights.experienceLevels.mid.max / 100000).toFixed(2)}L
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span>Senior Level</span>
+                              <span className="flex items-center gap-1">
+                                <IndianRupee className="w-3 h-3" />
+                                {(salaryInsights.experienceLevels.senior.min / 100000).toFixed(2)}L - 
+                                {(salaryInsights.experienceLevels.senior.max / 100000).toFixed(2)}L
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {salaryInsights.skillPremiums.length > 0 && (
+                          <div className="col-span-2">
+                            <h4 className="font-medium mb-4">Skill Premiums</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              {salaryInsights.skillPremiums.map((skill) => (
+                                <div 
+                                  key={skill.skill}
+                                  className="p-4 border rounded-lg"
+                                >
+                                  <div className="font-medium">{skill.skill}</div>
+                                  <div className="text-2xl font-bold text-primary">
+                                    +{skill.percentage}%
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {salaryInsights.cityAdjustments.length > 0 && (
+                          <div className="col-span-2">
+                            <h4 className="font-medium mb-4">City-wise Adjustments</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              {salaryInsights.cityAdjustments.map((city) => (
+                                <div 
+                                  key={city.city}
+                                  className="p-4 border rounded-lg"
+                                >
+                                  <div className="font-medium">{city.city}</div>
+                                  <div className="text-2xl font-bold">
+                                    {city.percentage}%
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <h3 className="text-lg font-medium mb-2">No Salary Data Available</h3>
-                  <p className="text-muted-foreground mb-4">
-                    We couldn't find salary data for {companyName} at the moment.
-                  </p>
-                  <Button onClick={fetchCompanyData} variant="outline" className="gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    Retry Loading Data
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+
+            <NegotiationHelper
+              role={jobRole}
+              experience={0}
+              location={location || ''}
+              skills={salaryData?.[0]?.skills?.map(s => s.name) || []}
+              companyName={companyName}
+              industry={industry}
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="experiences" className="mt-6">
