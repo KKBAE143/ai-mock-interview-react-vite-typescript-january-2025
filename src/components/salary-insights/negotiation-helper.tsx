@@ -24,10 +24,12 @@ import {
   Clock,
   Gift,
   IndianRupee,
+  InfoIcon,
 } from 'lucide-react';
 import { generateNegotiationRecommendations } from '@/lib/gemini-service';
 import type { NegotiationRecommendation } from '@/lib/gemini-service';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface NegotiationHelperProps {
   role?: string;
@@ -168,6 +170,7 @@ export function NegotiationHelper({
         <CardTitle className="flex items-center gap-2">
           <Target className="w-5 h-5" />
           Salary Negotiation Helper
+          {companyName && <span>- {companyName}</span>}
         </CardTitle>
         <CardDescription>
           Get personalized recommendations for your salary negotiation
@@ -176,7 +179,7 @@ export function NegotiationHelper({
       
       <CardContent className="space-y-6">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 mb-4">
+          <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
               {error}
@@ -192,6 +195,7 @@ export function NegotiationHelper({
               value={role}
               onChange={(e) => setRole(e.target.value)}
               placeholder="e.g. Senior Software Engineer"
+              className="bg-white"
             />
           </div>
           
@@ -212,12 +216,58 @@ export function NegotiationHelper({
               <SelectTrigger>
                 <SelectValue placeholder="Select location" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[300px]">
+                <SelectItem value="andhra-pradesh">Andhra Pradesh</SelectItem>
+                <SelectItem value="arunachal-pradesh">Arunachal Pradesh</SelectItem>
+                <SelectItem value="assam">Assam</SelectItem>
+                <SelectItem value="bihar">Bihar</SelectItem>
+                <SelectItem value="chhattisgarh">Chhattisgarh</SelectItem>
+                <SelectItem value="goa">Goa</SelectItem>
+                <SelectItem value="gujarat">Gujarat</SelectItem>
+                <SelectItem value="haryana">Haryana</SelectItem>
+                <SelectItem value="himachal-pradesh">Himachal Pradesh</SelectItem>
+                <SelectItem value="jharkhand">Jharkhand</SelectItem>
+                <SelectItem value="karnataka">Karnataka</SelectItem>
+                <SelectItem value="kerala">Kerala</SelectItem>
+                <SelectItem value="madhya-pradesh">Madhya Pradesh</SelectItem>
+                <SelectItem value="maharashtra">Maharashtra</SelectItem>
+                <SelectItem value="manipur">Manipur</SelectItem>
+                <SelectItem value="meghalaya">Meghalaya</SelectItem>
+                <SelectItem value="mizoram">Mizoram</SelectItem>
+                <SelectItem value="nagaland">Nagaland</SelectItem>
+                <SelectItem value="odisha">Odisha</SelectItem>
+                <SelectItem value="punjab">Punjab</SelectItem>
+                <SelectItem value="rajasthan">Rajasthan</SelectItem>
+                <SelectItem value="sikkim">Sikkim</SelectItem>
+                <SelectItem value="tamil-nadu">Tamil Nadu</SelectItem>
+                <SelectItem value="telangana">Telangana</SelectItem>
+                <SelectItem value="tripura">Tripura</SelectItem>
+                <SelectItem value="uttar-pradesh">Uttar Pradesh</SelectItem>
+                <SelectItem value="uttarakhand">Uttarakhand</SelectItem>
+                <SelectItem value="west-bengal">West Bengal</SelectItem>
+
+                {/* Union Territories */}
+                <SelectItem value="andaman-and-nicobar">Andaman and Nicobar Islands</SelectItem>
+                <SelectItem value="chandigarh">Chandigarh</SelectItem>
+                <SelectItem value="dadra-and-nagar-haveli">Dadra and Nagar Haveli</SelectItem>
+                <SelectItem value="daman-and-diu">Daman and Diu</SelectItem>
+                <SelectItem value="delhi">Delhi</SelectItem>
+                <SelectItem value="jammu-and-kashmir">Jammu and Kashmir</SelectItem>
+                <SelectItem value="ladakh">Ladakh</SelectItem>
+                <SelectItem value="lakshadweep">Lakshadweep</SelectItem>
+                <SelectItem value="puducherry">Puducherry</SelectItem>
+
+                {/* Major Cities */}
                 <SelectItem value="bangalore">Bangalore</SelectItem>
                 <SelectItem value="mumbai">Mumbai</SelectItem>
-                <SelectItem value="delhi">Delhi NCR</SelectItem>
+                <SelectItem value="delhi-ncr">Delhi NCR</SelectItem>
                 <SelectItem value="hyderabad">Hyderabad</SelectItem>
+                <SelectItem value="chennai">Chennai</SelectItem>
                 <SelectItem value="pune">Pune</SelectItem>
+                <SelectItem value="kolkata">Kolkata</SelectItem>
+                <SelectItem value="ahmedabad">Ahmedabad</SelectItem>
+                <SelectItem value="noida">Noida</SelectItem>
+                <SelectItem value="gurgaon">Gurgaon</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -269,6 +319,24 @@ export function NegotiationHelper({
                 <SelectItem value="small">Small (50-200 employees)</SelectItem>
                 <SelectItem value="medium">Medium (201-1000 employees)</SelectItem>
                 <SelectItem value="large">Large (1000+ employees)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="industry">Industry</Label>
+            <Select value={industry} onValueChange={setIndustry}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select industry" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="technology">Technology</SelectItem>
+                <SelectItem value="finance">Finance</SelectItem>
+                <SelectItem value="healthcare">Healthcare</SelectItem>
+                <SelectItem value="retail">Retail</SelectItem>
+                <SelectItem value="manufacturing">Manufacturing</SelectItem>
+                <SelectItem value="consulting">Consulting</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>

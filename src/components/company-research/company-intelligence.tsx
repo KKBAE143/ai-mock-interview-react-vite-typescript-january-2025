@@ -30,6 +30,7 @@ import {
   Code2,
   GitBranch,
   Settings,
+  InfoIcon,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +57,9 @@ import { cn } from "@/lib/utils";
 import { predictSalaryTrends, analyzeSalaryFactors } from '@/lib/gemini-service';
 import type { SalaryInsights } from '../salary-insights/types';
 import { NegotiationHelper } from '@/components/salary-insights/negotiation-helper';
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 interface CompanyNews {
   title: string;
@@ -444,10 +448,7 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                 {loading.salary ? (
                   <div className="space-y-4">
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="animate-pulse">
-                        <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-                        <div className="h-8 bg-gray-200 rounded w-full"></div>
-                      </div>
+                      <Skeleton key={i} className="h-[125px] w-full" />
                     ))}
                   </div>
                 ) : (
@@ -463,12 +464,34 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                             <SelectTrigger>
                               <SelectValue placeholder="Select location" />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="bangalore">Bangalore</SelectItem>
-                              <SelectItem value="mumbai">Mumbai</SelectItem>
-                              <SelectItem value="delhi">Delhi NCR</SelectItem>
-                              <SelectItem value="hyderabad">Hyderabad</SelectItem>
-                              <SelectItem value="pune">Pune</SelectItem>
+                            <SelectContent className="max-h-[300px]">
+                              <ScrollArea className="h-[400px]">
+                                {/* Major Tech Hubs */}
+                                <div className="px-2 py-1.5 text-sm font-semibold">Major Tech Hubs</div>
+                                <SelectItem value="bangalore">Bangalore</SelectItem>
+                                <SelectItem value="hyderabad">Hyderabad</SelectItem>
+                                <SelectItem value="mumbai">Mumbai</SelectItem>
+                                <SelectItem value="delhi-ncr">Delhi NCR</SelectItem>
+                                <SelectItem value="pune">Pune</SelectItem>
+                                <SelectItem value="chennai">Chennai</SelectItem>
+                                <SelectItem value="kolkata">Kolkata</SelectItem>
+                                <SelectItem value="noida">Noida</SelectItem>
+                                <SelectItem value="gurgaon">Gurgaon</SelectItem>
+
+                                <Separator className="my-2" />
+                                
+                                {/* States */}
+                                <div className="px-2 py-1.5 text-sm font-semibold">States</div>
+                                <SelectItem value="andhra-pradesh">Andhra Pradesh</SelectItem>
+                                <SelectItem value="karnataka">Karnataka</SelectItem>
+                                <SelectItem value="kerala">Kerala</SelectItem>
+                                <SelectItem value="maharashtra">Maharashtra</SelectItem>
+                                <SelectItem value="tamil-nadu">Tamil Nadu</SelectItem>
+                                <SelectItem value="telangana">Telangana</SelectItem>
+                                <SelectItem value="gujarat">Gujarat</SelectItem>
+                                <SelectItem value="rajasthan">Rajasthan</SelectItem>
+                                {/* Add other states as needed */}
+                              </ScrollArea>
                             </SelectContent>
                           </Select>
                         </div>
@@ -478,7 +501,7 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                         <Button 
                           onClick={handleSalaryPrediction}
                           disabled={isAnalyzing || !location}
-                          className="w-full md:w-auto"
+                          className="w-full md:w-auto relative overflow-hidden group"
                         >
                           {isAnalyzing ? (
                             <>
@@ -486,122 +509,373 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                               Analyzing...
                             </>
                           ) : (
-                            'Get AI Insights'
+                            <>
+                              <span className="relative z-10">Get AI Insights</span>
+                              <motion.div
+                                className="absolute inset-0 bg-primary/10"
+                                initial={{ x: "-100%" }}
+                                animate={{ x: "100%" }}
+                                transition={{ repeat: Infinity, duration: 1.5 }}
+                              />
+                            </>
                           )}
                         </Button>
                       </div>
                     </div>
 
                     {salaryInsights && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <h4 className="font-medium">Salary Range</h4>
-                          <div className="grid grid-cols-3 gap-4">
-                            <div className="p-4 bg-gray-50 rounded-lg">
-                              <div className="text-sm text-muted-foreground">Minimum</div>
-                              <div className="text-2xl font-bold">
-                                ₹{(salaryInsights.baseData.minimum / 100000).toFixed(2)}L
-                              </div>
+                      <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-8"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <motion.div 
+                            initial={{ scale: 0.95 }}
+                            animate={{ scale: 1 }}
+                            className="space-y-4"
+                          >
+                            <h4 className="font-medium flex items-center gap-2">
+                              <IndianRupee className="w-4 h-4" />
+                              Salary Range
+                            </h4>
+                            <div className="grid grid-cols-3 gap-4">
+                              <motion.div 
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.1 }}
+                                className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                              >
+                                <div className="text-sm text-muted-foreground">Minimum</div>
+                                <div className="text-2xl font-bold">
+                                  ₹{(salaryInsights.baseData.minimum / 100000).toFixed(2)}L
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  Per Month: ₹{Math.round(salaryInsights.baseData.minimum / 12).toLocaleString('en-IN')}
+                                </div>
+                              </motion.div>
+                              <motion.div 
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                                className="p-4 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors"
+                              >
+                                <div className="text-sm text-muted-foreground">Average</div>
+                                <div className="text-2xl font-bold text-primary">
+                                  ₹{(salaryInsights.baseData.average / 100000).toFixed(2)}L
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  Per Month: ₹{Math.round(salaryInsights.baseData.average / 12).toLocaleString('en-IN')}
+                                </div>
+                              </motion.div>
+                              <motion.div 
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.3 }}
+                                className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                              >
+                                <div className="text-sm text-muted-foreground">Maximum</div>
+                                <div className="text-2xl font-bold">
+                                  ₹{(salaryInsights.baseData.maximum / 100000).toFixed(2)}L
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  Per Month: ₹{Math.round(salaryInsights.baseData.maximum / 12).toLocaleString('en-IN')}
+                                </div>
+                              </motion.div>
                             </div>
-                            <div className="p-4 bg-gray-50 rounded-lg">
-                              <div className="text-sm text-muted-foreground">Average</div>
-                              <div className="text-2xl font-bold text-primary">
-                                ₹{(salaryInsights.baseData.average / 100000).toFixed(2)}L
+                          </motion.div>
+
+                          <motion.div 
+                            initial={{ scale: 0.95 }}
+                            animate={{ scale: 1 }}
+                            className="space-y-4"
+                          >
+                            <h4 className="font-medium flex items-center gap-2">
+                              <TrendingUp className="w-4 h-4" />
+                              Market Demand
+                            </h4>
+                            <motion.div 
+                              initial={{ x: 20, opacity: 0 }}
+                              animate={{ x: 0, opacity: 1 }}
+                              className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                            >
+                              <div className="text-2xl font-bold mb-2 flex items-center gap-2">
+                                {salaryInsights.marketDemand}
+                                {salaryInsights.marketDemand === 'High' && (
+                                  <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ delay: 0.5 }}
+                                  >
+                                    <Badge className="bg-green-100 text-green-800">Hot</Badge>
+                                  </motion.div>
+                                )}
                               </div>
-                            </div>
-                            <div className="p-4 bg-gray-50 rounded-lg">
-                              <div className="text-sm text-muted-foreground">Maximum</div>
-                              <div className="text-2xl font-bold">
-                                ₹{(salaryInsights.baseData.maximum / 100000).toFixed(2)}L
-                              </div>
-                            </div>
-                          </div>
+                              <Progress 
+                                value={
+                                  salaryInsights.marketDemand === 'High' 
+                                    ? 100 
+                                    : salaryInsights.marketDemand === 'Medium' 
+                                    ? 50 
+                                    : 25
+                                }
+                                className="h-2"
+                              />
+                            </motion.div>
+                          </motion.div>
                         </div>
 
-                        <div className="space-y-4">
-                          <h4 className="font-medium">Market Demand</h4>
-                          <div className="p-4 bg-gray-50 rounded-lg">
-                            <div className="text-2xl font-bold mb-2">{salaryInsights.marketDemand}</div>
-                            <Progress 
-                              value={
-                                salaryInsights.marketDemand === 'High' 
-                                  ? 100 
-                                  : salaryInsights.marketDemand === 'Medium' 
-                                  ? 50 
-                                  : 25
-                              } 
-                            />
-                          </div>
-                        </div>
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.4 }}
+                          className="col-span-2"
+                        >
+                          <Tabs defaultValue="experience" className="w-full">
+                            <TabsList className="grid w-full grid-cols-2">
+                              <TabsTrigger value="experience">Experience Levels</TabsTrigger>
+                              <TabsTrigger value="cities">City Comparison</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="experience" className="mt-4">
+                              <Card>
+                                <CardContent className="pt-6">
+                                  <div className="space-y-4">
+                                    <motion.div 
+                                      initial={{ x: -20, opacity: 0 }}
+                                      animate={{ x: 0, opacity: 1 }}
+                                      transition={{ delay: 0.1 }}
+                                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                                    >
+                                      <div>
+                                        <div className="font-medium">Entry Level</div>
+                                        <div className="text-sm text-muted-foreground">0-3 years</div>
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="font-bold">
+                                          ₹{(salaryInsights.experienceLevels.entry.min / 100000).toFixed(1)}L - 
+                                          {(salaryInsights.experienceLevels.entry.max / 100000).toFixed(1)}L
+                                        </div>
+                                        <div className="text-sm text-muted-foreground">
+                                          ₹{Math.round(salaryInsights.experienceLevels.entry.min / 12).toLocaleString('en-IN')} - 
+                                          {Math.round(salaryInsights.experienceLevels.entry.max / 12).toLocaleString('en-IN')}/month
+                                        </div>
+                                      </div>
+                                    </motion.div>
+                                    
+                                    <motion.div 
+                                      initial={{ x: -20, opacity: 0 }}
+                                      animate={{ x: 0, opacity: 1 }}
+                                      transition={{ delay: 0.2 }}
+                                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                                    >
+                                      <div>
+                                        <div className="font-medium">Mid Level</div>
+                                        <div className="text-sm text-muted-foreground">3-6 years</div>
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="font-bold">
+                                          ₹{(salaryInsights.experienceLevels.mid.min / 100000).toFixed(1)}L - 
+                                          {(salaryInsights.experienceLevels.mid.max / 100000).toFixed(1)}L
+                                        </div>
+                                        <div className="text-sm text-muted-foreground">
+                                          ₹{Math.round(salaryInsights.experienceLevels.mid.min / 12).toLocaleString('en-IN')} - 
+                                          {Math.round(salaryInsights.experienceLevels.mid.max / 12).toLocaleString('en-IN')}/month
+                                        </div>
+                                      </div>
+                                    </motion.div>
+                                    
+                                    <motion.div 
+                                      initial={{ x: -20, opacity: 0 }}
+                                      animate={{ x: 0, opacity: 1 }}
+                                      transition={{ delay: 0.3 }}
+                                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                                    >
+                                      <div>
+                                        <div className="font-medium">Senior Level</div>
+                                        <div className="text-sm text-muted-foreground">6+ years</div>
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="font-bold">
+                                          ₹{(salaryInsights.experienceLevels.senior.min / 100000).toFixed(1)}L - 
+                                          {(salaryInsights.experienceLevels.senior.max / 100000).toFixed(1)}L
+                                        </div>
+                                        <div className="text-sm text-muted-foreground">
+                                          ₹{Math.round(salaryInsights.experienceLevels.senior.min / 12).toLocaleString('en-IN')} - 
+                                          {Math.round(salaryInsights.experienceLevels.senior.max / 12).toLocaleString('en-IN')}/month
+                                        </div>
+                                      </div>
+                                    </motion.div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </TabsContent>
+                            <TabsContent value="cities" className="mt-4">
+                              <Card>
+                                <CardContent className="pt-6">
+                                  <div className="space-y-6">
+                                    {/* Tier 1 Cities */}
+                                    <div>
+                                      <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                                        <Star className="w-4 h-4 text-yellow-500" />
+                                        Tier 1 Cities
+                                      </h4>
+                                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        {salaryInsights.cityAdjustments
+                                          .filter(city => city.tier === "1")
+                                          .map((city, index) => (
+                                            <motion.div
+                                              key={city.city}
+                                              initial={{ scale: 0.9, opacity: 0 }}
+                                              animate={{ scale: 1, opacity: 1 }}
+                                              transition={{ delay: index * 0.1 }}
+                                              className="relative p-4 border rounded-lg hover:bg-gray-50 transition-colors group"
+                                            >
+                                              <div className="flex items-center gap-2 mb-2">
+                                                <MapPin className="w-4 h-4 text-muted-foreground" />
+                                                <div className="font-medium">{city.city}</div>
+                                              </div>
+                                              <div className="text-2xl font-bold text-primary">
+                                                {city.percentage}%
+                                              </div>
+                                              <div className="text-sm text-muted-foreground">
+                                                of base salary
+                                              </div>
+                                              <Progress 
+                                                value={city.percentage} 
+                                                className="h-1 mt-2 bg-gray-100"
+                                              />
+                                              <HoverCard>
+                                                <HoverCardTrigger>
+                                                  <InfoIcon className="w-4 h-4 absolute top-2 right-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                </HoverCardTrigger>
+                                                <HoverCardContent>
+                                                  <div className="space-y-2">
+                                                    <p className="text-sm">Salary Range in {city.city}:</p>
+                                                    <div className="grid grid-cols-2 gap-2 text-sm">
+                                                      <div>
+                                                        <div className="text-muted-foreground">Annual</div>
+                                                        <div className="font-medium">
+                                                          ₹{((salaryInsights.baseData.average * city.percentage / 100) / 100000).toFixed(1)}L
+                                                        </div>
+                                                      </div>
+                                                      <div>
+                                                        <div className="text-muted-foreground">Monthly</div>
+                                                        <div className="font-medium">
+                                                          ₹{Math.round((salaryInsights.baseData.average * city.percentage / 100) / 12).toLocaleString('en-IN')}
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </HoverCardContent>
+                                              </HoverCard>
+                                            </motion.div>
+                                          ))}
+                                      </div>
+                                    </div>
 
-                        <div className="col-span-2">
-                          <h4 className="font-medium mb-4">Experience-wise Breakdown</h4>
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <span>Entry Level</span>
-                              <span className="flex items-center gap-1">
-                                <IndianRupee className="w-3 h-3" />
-                                {(salaryInsights.experienceLevels.entry.min / 100000).toFixed(2)}L - 
-                                {(salaryInsights.experienceLevels.entry.max / 100000).toFixed(2)}L
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span>Mid Level</span>
-                              <span className="flex items-center gap-1">
-                                <IndianRupee className="w-3 h-3" />
-                                {(salaryInsights.experienceLevels.mid.min / 100000).toFixed(2)}L - 
-                                {(salaryInsights.experienceLevels.mid.max / 100000).toFixed(2)}L
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span>Senior Level</span>
-                              <span className="flex items-center gap-1">
-                                <IndianRupee className="w-3 h-3" />
-                                {(salaryInsights.experienceLevels.senior.min / 100000).toFixed(2)}L - 
-                                {(salaryInsights.experienceLevels.senior.max / 100000).toFixed(2)}L
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+                                    {/* Tier 2 Cities */}
+                                    <div>
+                                      <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                                        <Building2 className="w-4 h-4 text-blue-500" />
+                                        Tier 2 Cities
+                                      </h4>
+                                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        {salaryInsights.cityAdjustments
+                                          .filter(city => city.tier === "2")
+                                          .map((city, index) => (
+                                            <motion.div
+                                              key={city.city}
+                                              initial={{ scale: 0.9, opacity: 0 }}
+                                              animate={{ scale: 1, opacity: 1 }}
+                                              transition={{ delay: 0.3 + (index * 0.1) }}
+                                              className="relative p-4 border rounded-lg hover:bg-gray-50 transition-colors group"
+                                            >
+                                              <div className="flex items-center gap-2 mb-2">
+                                                <MapPin className="w-4 h-4 text-muted-foreground" />
+                                                <div className="font-medium">{city.city}</div>
+                                              </div>
+                                              <div className="text-2xl font-bold text-blue-600">
+                                                {city.percentage}%
+                                              </div>
+                                              <div className="text-sm text-muted-foreground">
+                                                of base salary
+                                              </div>
+                                              <Progress 
+                                                value={city.percentage} 
+                                                className="h-1 mt-2 bg-gray-100"
+                                              />
+                                              <HoverCard>
+                                                <HoverCardTrigger>
+                                                  <InfoIcon className="w-4 h-4 absolute top-2 right-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                </HoverCardTrigger>
+                                                <HoverCardContent>
+                                                  <div className="space-y-2">
+                                                    <p className="text-sm">Salary Range in {city.city}:</p>
+                                                    <div className="grid grid-cols-2 gap-2 text-sm">
+                                                      <div>
+                                                        <div className="text-muted-foreground">Annual</div>
+                                                        <div className="font-medium">
+                                                          ₹{((salaryInsights.baseData.average * city.percentage / 100) / 100000).toFixed(1)}L
+                                                        </div>
+                                                      </div>
+                                                      <div>
+                                                        <div className="text-muted-foreground">Monthly</div>
+                                                        <div className="font-medium">
+                                                          ₹{Math.round((salaryInsights.baseData.average * city.percentage / 100) / 12).toLocaleString('en-IN')}
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </HoverCardContent>
+                                              </HoverCard>
+                                            </motion.div>
+                                          ))}
+                                      </div>
+                                    </div>
+
+                                    <div className="text-xs text-muted-foreground mt-4">
+                                      * Percentages are relative to base salary in Bangalore
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </TabsContent>
+                          </Tabs>
+                        </motion.div>
 
                         {salaryInsights.skillPremiums.length > 0 && (
-                          <div className="col-span-2">
-                            <h4 className="font-medium mb-4">Skill Premiums</h4>
+                          <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 }}
+                            className="col-span-2"
+                          >
+                            <h4 className="font-medium mb-4 flex items-center gap-2">
+                              <Code2 className="w-4 h-4" />
+                              Skill Premiums
+                            </h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                              {salaryInsights.skillPremiums.map((skill) => (
-                                <div 
+                              {salaryInsights.skillPremiums.map((skill, index) => (
+                                <motion.div 
                                   key={skill.skill}
-                                  className="p-4 border rounded-lg"
+                                  initial={{ scale: 0.9, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  transition={{ delay: 0.6 + (index * 0.1) }}
+                                  className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
                                 >
                                   <div className="font-medium">{skill.skill}</div>
                                   <div className="text-2xl font-bold text-primary">
                                     +{skill.percentage}%
                                   </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {salaryInsights.cityAdjustments.length > 0 && (
-                          <div className="col-span-2">
-                            <h4 className="font-medium mb-4">City-wise Adjustments</h4>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                              {salaryInsights.cityAdjustments.map((city) => (
-                                <div 
-                                  key={city.city}
-                                  className="p-4 border rounded-lg"
-                                >
-                                  <div className="font-medium">{city.city}</div>
-                                  <div className="text-2xl font-bold">
-                                    {city.percentage}%
+                                  <div className="text-sm text-muted-foreground">
+                                    salary premium
                                   </div>
-                                </div>
+                                </motion.div>
                               ))}
                             </div>
-                          </div>
+                          </motion.div>
                         )}
-                      </div>
+                      </motion.div>
                     )}
                   </div>
                 )}

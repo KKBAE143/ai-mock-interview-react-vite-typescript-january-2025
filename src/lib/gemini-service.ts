@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getRoleSalaryInsights } from './salary-api';
 
 // Check if API key is available
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -25,116 +26,137 @@ export async function predictSalaryTrends({
   if (experience < 0) throw new Error('Experience must be a positive number');
   if (!location) throw new Error('Location is required');
 
-  console.log('Initializing Gemini model...');
-  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-
-  const prompt = `You are a salary data analysis API. Your task is to provide salary insights for the following profile in a strict JSON format.
-
-Input Data:
-- Role: ${role}
-- Experience: ${experience} years
-- Location: ${location}
-- Skills: ${skills.join(', ')}
-
-Instructions:
-1. Analyze the salary data for this profile
-2. Return ONLY a JSON object with no additional text or explanation
-3. Use the exact structure provided below
-4. Ensure all numbers are plain numbers without commas or currency symbols
-5. All salary values should be in INR
-
-Required JSON Structure:
-{
-  "baseData": {
-    "minimum": 800000,
-    "average": 1200000,
-    "maximum": 1800000,
-    "currency": "INR"
-  },
-  "experienceLevels": {
-    "entry": {
-      "min": 600000,
-      "max": 900000
-    },
-    "mid": {
-      "min": 900000,
-      "max": 1400000
-    },
-    "senior": {
-      "min": 1400000,
-      "max": 2000000
-    }
-  },
-  "cityAdjustments": [
-    {
-      "city": "Bangalore",
-      "percentage": 100
-    },
-    {
-      "city": "Mumbai",
-      "percentage": 95
-    }
-  ],
-  "skillPremiums": [
-    {
-      "skill": "React",
-      "percentage": 15
-    }
-  ],
-  "benefits": [
-    {
-      "name": "Health Insurance",
-      "description": "Comprehensive health coverage",
-      "isAvailable": true
-    }
-  ],
-  "predictions": [
-    {
-      "year": 2024,
-      "predicted": 1300000,
-      "confidence": 85
-    }
-  ],
-  "lastUpdated": "2024-02-03",
-  "marketDemand": "High"
-}
-
-Remember: Return ONLY the JSON object, no other text.`;
-
   try {
-    console.log('Sending request to Gemini...');
-    const result = await model.generateContent(prompt);
-    console.log('Received response from Gemini');
+    // Fetch real-time city comparison data
+    const cityInsights = await getRoleSalaryInsights(role, experience);
     
-    const response = await result.response;
-    const text = response.text();
-    
-    console.log('Raw response:', text);
-    
-    // Clean the response text to ensure it's valid JSON
-    const cleanedText = text.trim()
-      .replace(/^```json/g, '') // Remove JSON code block markers if present
-      .replace(/```$/g, '')     // Remove ending code block marker if present
-      .trim();
-    
-    console.log('Cleaned response:', cleanedText);
-    
-    try {
-      const parsedData = JSON.parse(cleanedText);
-      
-      // Validate the required structure
-      if (!parsedData.baseData || !parsedData.experienceLevels || !parsedData.marketDemand) {
-        throw new Error('Response missing required fields');
+    // Get base salary data from the selected location
+    const locationData = cityInsights.find(city => 
+      city.city.toLowerCase() === location.toLowerCase()
+    );
+
+    if (!locationData) {
+      throw new Error('Location data not found');
+    }
+
+    // Calculate base salary data
+    const baseData = {
+      minimum: locationData.salaryRange.min,
+      average: locationData.salaryRange.median,
+      maximum: locationData.salaryRange.max,
+      currency: "INR"
+    };
+
+    // Calculate experience-based salary ranges
+    const experienceLevels = {
+      entry: {
+        min: Math.round(baseData.minimum * 0.7),
+        max: Math.round(baseData.minimum * 1.2)
+      },
+      mid: {
+        min: Math.round(baseData.average * 0.9),
+        max: Math.round(baseData.average * 1.3)
+      },
+      senior: {
+        min: Math.round(baseData.maximum * 0.8),
+        max: Math.round(baseData.maximum * 1.2)
       }
-      
-      console.log('Successfully parsed JSON response');
-      return parsedData;
+    };
+
+    // Format city adjustments from real-time data
+    const cityAdjustments = cityInsights.map(city => ({
+      city: city.city,
+      percentage: city.percentage,
+      tier: city.tier
+    }));
+
+    // Initialize Gemini for skill premiums and market analysis
+    console.log('Initializing Gemini model...');
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+    const prompt = `You are a salary insights API. Analyze the following role and provide skill premiums and market demand information.
+    
+    Role: ${role}
+    Experience: ${experience} years
+    Location: ${location}
+    Skills: ${skills.join(', ')}
+
+    Respond with ONLY a JSON object in this exact format:
+    {
+      "skillPremiums": [
+        {
+          "skill": "string",
+          "percentage": number
+        }
+      ],
+      "marketDemand": "High" | "Medium" | "Low"
+    }
+
+    Notes:
+    - Include only skills relevant to the role
+    - Percentage should be a number (15 not 15%)
+    - marketDemand must be exactly "High", "Medium", or "Low"
+    - Do not include any explanation or additional text
+    - Ensure the JSON is properly formatted`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text().trim();
+    
+    console.log('Raw Gemini response:', text);
+
+    // Clean the response text and parse JSON
+    const cleanedText = text
+      .replace(/```json\s*/g, '')
+      .replace(/```\s*$/g, '')
+      .trim();
+
+    try {
+      const aiResponse = JSON.parse(cleanedText);
+
+      // Validate the response structure
+      if (!aiResponse.skillPremiums || !Array.isArray(aiResponse.skillPremiums) || !aiResponse.marketDemand) {
+        throw new Error('Invalid response structure from AI');
+      }
+
+      // Validate and clean skill premiums
+      const validatedSkillPremiums = aiResponse.skillPremiums.map(premium => ({
+        skill: String(premium.skill),
+        percentage: Number(premium.percentage)
+      })).filter(premium => !isNaN(premium.percentage));
+
+      // Validate market demand
+      const validMarketDemand = ['High', 'Medium', 'Low'].includes(aiResponse.marketDemand)
+        ? aiResponse.marketDemand
+        : 'Medium';
+
+      // Return the combined data
+      return {
+        baseData,
+        experienceLevels,
+        cityAdjustments,
+        skillPremiums: validatedSkillPremiums,
+        marketDemand: validMarketDemand,
+        lastUpdated: new Date().toISOString().split('T')[0]
+      };
     } catch (parseError) {
-      console.error('Failed to parse Gemini response as JSON:', cleanedText);
-      throw new Error('Invalid JSON response from AI model');
+      console.error('JSON parsing error:', parseError);
+      console.error('Attempted to parse:', cleanedText);
+      
+      // Return default data if parsing fails
+      return {
+        baseData,
+        experienceLevels,
+        cityAdjustments,
+        skillPremiums: [
+          { skill: role, percentage: 10 }
+        ],
+        marketDemand: "Medium",
+        lastUpdated: new Date().toISOString().split('T')[0]
+      };
     }
   } catch (error) {
-    console.error('Error in Gemini API call:', error);
+    console.error('Error in salary prediction:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to predict salary trends');
   }
 }
@@ -236,7 +258,7 @@ export async function generateNegotiationRecommendations({
   console.log('Initializing negotiation recommendations...');
   const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
-  const prompt = `You are a salary negotiation expert API. Generate detailed negotiation recommendations for the following profile in JSON format.
+  const prompt = `You are a salary negotiation expert API. Generate detailed negotiation recommendations based on market data and industry standards. Focus on providing general market insights that would be applicable across companies in the same industry and location.
 
 Input Profile:
 - Role: ${role}
@@ -249,18 +271,22 @@ ${companySize ? `- Company Size: ${companySize}` : ''}
 ${industry ? `- Industry: ${industry}` : ''}
 
 Instructions:
-1. Analyze the profile and market conditions
+1. Analyze the profile using general market data and industry standards
 2. Return ONLY a JSON object with no additional text
-3. Provide practical negotiation advice and scripts
+3. Provide practical negotiation advice based on market conditions
 4. All salary values should be in INR
 5. Include market-based justifications
+6. Focus on industry averages and trends rather than company-specific data
+7. Consider location-based salary variations
+8. Account for experience level and skill set impact on salary
 
 Required JSON Structure:
 {
   "marketContext": {
     "positionStrength": "strong",
     "keyMarketFactors": [
-      "High demand for full-stack developers",
+      "High demand for full-stack developers in Bangalore",
+      "15% YoY growth in tech salaries",
       "Significant skill gap in cloud technologies"
     ],
     "competitiveSalaryRange": {
@@ -271,10 +297,10 @@ Required JSON Structure:
   },
   "negotiationPoints": [
     {
-      "category": "Technical Expertise",
+      "category": "Market Position",
       "points": [
-        "5 years of experience in cloud architecture",
-        "Led 3 successful digital transformation projects"
+        "Current market rate for this role and experience level",
+        "Industry demand for specific skills"
       ],
       "importance": "high"
     }
@@ -282,17 +308,17 @@ Required JSON Structure:
   "talkingPoints": [
     {
       "situation": "Initial Offer Discussion",
-      "script": "I appreciate the offer of X. Based on my research and experience, similar roles in the market are commanding Y. Could we discuss how we might bridge this gap?",
+      "script": "Based on my research of the current market rates in [location] for [role] positions, and considering my experience with [key skills], I believe a compensation in the range of X would be more aligned with the market.",
       "tips": [
-        "Pause after stating your position",
-        "Use market data to support your case"
+        "Focus on market data rather than personal needs",
+        "Highlight skills that command premium in current market"
       ]
     }
   ],
   "additionalBenefits": [
     {
       "benefit": "Remote Work",
-      "description": "2-3 days per week remote work flexibility",
+      "description": "Standard in the industry for similar roles",
       "negotiability": "highly negotiable"
     }
   ]

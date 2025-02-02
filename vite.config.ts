@@ -12,15 +12,21 @@ export default defineConfig({
   },
   server: {
     port: 5174,
+    strictPort: false,
     hmr: {
       protocol: 'ws',
       port: 5174,
       clientPort: 5174,
-      timeout: 2000
+      timeout: 5000,
+      overlay: true
     },
     headers: {
       'Connection': 'keep-alive',
-      'Keep-Alive': 'timeout=5'
+      'Keep-Alive': 'timeout=5',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
+      'Access-Control-Allow-Credentials': 'true'
     },
     watch: {
       usePolling: true
@@ -52,7 +58,26 @@ export default defineConfig({
       '@radix-ui/react-checkbox', 
       '@radix-ui/react-toast', 
       '@radix-ui/react-progress', 
-      '@radix-ui/react-select'
-    ]
+      '@radix-ui/react-select',
+      'axios'
+    ],
+    esbuildOptions: {
+      target: 'es2020'
+    }
+  },
+  build: {
+    target: 'es2020',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@radix-ui/react-checkbox', '@radix-ui/react-toast', '@radix-ui/react-progress', '@radix-ui/react-select']
+        }
+      }
+    }
+  },
+  preview: {
+    port: 5174,
+    strictPort: false
   }
 });
