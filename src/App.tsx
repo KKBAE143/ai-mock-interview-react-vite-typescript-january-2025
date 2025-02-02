@@ -18,48 +18,57 @@ import AboutUs from "./routes/about-us";
 import Services from "./routes/services";
 import Contact from "./routes/contact";
 import { CompanySimulatorPage } from "./routes/company-simulator-page";
+import { OnboardingFlow } from "./components/onboarding/onboarding-flow";
+import { OnboardingGuard } from "./components/onboarding/onboarding-guard";
+import { Toaster } from "./components/ui/toaster";
 
 const App = () => {
   return (
-    <Router>
-      <Routes>
-        {/* public routes */}
-        <Route element={<PublicLayout />}>
-          <Route index element={<HomePage />} />
-          <Route path="about" element={<AboutUs />} />
-          <Route path="services" element={<Services />} />
-          <Route path="contact" element={<Contact />} />
-        </Route>
-
-        {/* authentication layout */}
-        <Route element={<AuthenticationLayout />}>
-          <Route path="/signin/*" element={<SignInPage />} />
-          <Route path="/signup/*" element={<SignUpPage />} />
-        </Route>
-
-        {/* protected routes */}
-        <Route
-          element={
-            <ProtectRoutes>
-              <MainLayout />
-            </ProtectRoutes>
-          }
-        >
-          {/* add all the protect routes */}
-          <Route element={<Generate />} path="/generate">
-            <Route index element={<Dashboard />} />
-            <Route path=":interviewId" element={<CreateEditPage />} />
-            <Route path="interview/:interviewId" element={<MockLoadPage />} />
-            <Route
-              path="interview/:interviewId/start"
-              element={<MockInterviewPage />}
-            />
-            <Route path="feedback/:interviewId" element={<Feedback />} />
-            <Route path="company-simulator" element={<CompanySimulatorPage />} />
+    <>
+      <Router>
+        <Routes>
+          {/* public routes */}
+          <Route element={<PublicLayout />}>
+            <Route index element={<HomePage />} />
+            <Route path="about" element={<AboutUs />} />
+            <Route path="services" element={<Services />} />
+            <Route path="contact" element={<Contact />} />
           </Route>
-        </Route>
-      </Routes>
-    </Router>
+
+          {/* authentication layout */}
+          <Route element={<AuthenticationLayout />}>
+            <Route path="/signin/*" element={<SignInPage />} />
+            <Route path="/signup/*" element={<SignUpPage />} />
+          </Route>
+
+          {/* protected routes */}
+          <Route
+            element={
+              <ProtectRoutes>
+                <OnboardingGuard>
+                  <MainLayout />
+                </OnboardingGuard>
+              </ProtectRoutes>
+            }
+          >
+            {/* add all the protect routes */}
+            <Route path="/onboarding" element={<OnboardingFlow />} />
+            <Route element={<Generate />} path="/generate">
+              <Route index element={<Dashboard />} />
+              <Route path=":interviewId" element={<CreateEditPage />} />
+              <Route path="interview/:interviewId" element={<MockLoadPage />} />
+              <Route
+                path="interview/:interviewId/start"
+                element={<MockInterviewPage />}
+              />
+              <Route path="feedback/:interviewId" element={<Feedback />} />
+              <Route path="company-simulator" element={<CompanySimulatorPage />} />
+            </Route>
+          </Route>
+        </Routes>
+      </Router>
+      <Toaster />
+    </>
   );
 };
 
