@@ -1,6 +1,12 @@
-const express = require('express');
-const { createServer: createViteServer } = require('vite');
-const compression = require('compression');
+import express from 'express';
+import { createServer as createViteServer } from 'vite';
+import compression from 'compression';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 async function createServer() {
   const app = express();
@@ -15,7 +21,7 @@ async function createServer() {
   // CORS configuration
   app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     next();
   });
@@ -35,4 +41,7 @@ async function createServer() {
   });
 }
 
-createServer(); 
+createServer().catch((err) => {
+  console.error('Error starting server:', err);
+  process.exit(1);
+}); 

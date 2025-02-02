@@ -3,13 +3,12 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AI Interview Mockup",
-  description: "Practice your interview skills with AI",
+  title: "Salary Negotiation Helper",
+  description: "Get personalized recommendations for your next salary negotiation",
 };
 
 export default function RootLayout({
@@ -19,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn(inter.className, "min-h-screen bg-background")}>
+      <body className={cn(inter.className, "min-h-screen bg-background antialiased")}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -27,7 +26,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <Toaster />
         </ThemeProvider>
       </body>
     </html>

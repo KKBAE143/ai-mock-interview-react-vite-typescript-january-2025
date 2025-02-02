@@ -1,52 +1,32 @@
-import path from "path";
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
   server: {
     port: 5174,
     strictPort: false,
+    host: true,
     hmr: {
-      protocol: 'ws',
-      port: 5174,
-      clientPort: 5174,
       timeout: 5000,
-      overlay: true
+      overlay: true,
     },
     headers: {
-      'Connection': 'keep-alive',
-      'Keep-Alive': 'timeout=5',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
-      'Access-Control-Allow-Credentials': 'true'
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
     },
-    watch: {
-      usePolling: true
-    },
-    proxy: {
-      '/api': {
-        target: 'http://localhost:5174',
-        changeOrigin: true,
-        secure: false,
-        ws: true,
-        configure: (proxy) => {
-          proxy.on('error', (err) => {
-            console.log('proxy error', err);
-          });
-          proxy.on('proxyReq', (_proxyReq, req) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
-          });
-        }
-      }
-    }
   },
   optimizeDeps: {
     include: [
@@ -66,15 +46,17 @@ export default defineConfig({
     }
   },
   build: {
-    target: 'es2020',
+    outDir: 'dist',
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['@radix-ui/react-checkbox', '@radix-ui/react-toast', '@radix-ui/react-progress', '@radix-ui/react-select']
-        }
-      }
-    }
+          'react-vendor': ['react', 'react-dom'],
+          'ui-vendor': ['@radix-ui/react-select', '@radix-ui/react-slider', '@radix-ui/react-switch', '@radix-ui/react-tabs'],
+          'chart-vendor': ['recharts'],
+        },
+      },
+    },
   },
   preview: {
     port: 5174,
