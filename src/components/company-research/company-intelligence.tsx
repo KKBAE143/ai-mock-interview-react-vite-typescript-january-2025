@@ -434,23 +434,23 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
 
         <TabsContent value="salary" className="mt-6">
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <LineChartIcon className="w-5 h-5" />
-                  Indian Salary Insights
-                </CardTitle>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <LineChartIcon className="w-5 h-5" />
+                Indian Salary Insights
+              </CardTitle>
                 <CardDescription>
                   AI-powered salary insights for {jobRole} at {companyName}
                 </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {loading.salary ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {loading.salary ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
                       <Skeleton key={i} className="h-[125px] w-full" />
-                    ))}
-                  </div>
+                  ))}
+                </div>
                 ) : (
                   <div className="space-y-8">
                     <div className="flex flex-col gap-4">
@@ -495,8 +495,8 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                             </SelectContent>
                           </Select>
                         </div>
-                      </div>
-                      
+                    </div>
+
                       <div className="flex justify-end">
                         <Button 
                           onClick={handleSalaryPrediction}
@@ -520,8 +520,8 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                             </>
                           )}
                         </Button>
-                      </div>
-                    </div>
+                          </div>
+                        </div>
 
                     {salaryInsights && (
                       <motion.div 
@@ -536,7 +536,7 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                             className="space-y-4"
                           >
                             <h4 className="font-medium flex items-center gap-2">
-                              <IndianRupee className="w-4 h-4" />
+                            <IndianRupee className="w-4 h-4" />
                               Salary Range
                             </h4>
                             <div className="grid grid-cols-3 gap-4">
@@ -549,10 +549,10 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                                 <div className="text-sm text-muted-foreground">Minimum</div>
                                 <div className="text-2xl font-bold">
                                   ₹{(salaryInsights.baseData.minimum / 100000).toFixed(2)}L
-                                </div>
+                          </div>
                                 <div className="text-xs text-muted-foreground mt-1">
                                   Per Month: ₹{Math.round(salaryInsights.baseData.minimum / 12).toLocaleString('en-IN')}
-                                </div>
+                        </div>
                               </motion.div>
                               <motion.div 
                                 initial={{ y: 20, opacity: 0 }}
@@ -563,10 +563,10 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                                 <div className="text-sm text-muted-foreground">Average</div>
                                 <div className="text-2xl font-bold text-primary">
                                   ₹{(salaryInsights.baseData.average / 100000).toFixed(2)}L
-                                </div>
+                          </div>
                                 <div className="text-xs text-muted-foreground mt-1">
                                   Per Month: ₹{Math.round(salaryInsights.baseData.average / 12).toLocaleString('en-IN')}
-                                </div>
+                        </div>
                               </motion.div>
                               <motion.div 
                                 initial={{ y: 20, opacity: 0 }}
@@ -577,10 +577,10 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                                 <div className="text-sm text-muted-foreground">Maximum</div>
                                 <div className="text-2xl font-bold">
                                   ₹{(salaryInsights.baseData.maximum / 100000).toFixed(2)}L
-                                </div>
+                      </div>
                                 <div className="text-xs text-muted-foreground mt-1">
                                   Per Month: ₹{Math.round(salaryInsights.baseData.maximum / 12).toLocaleString('en-IN')}
-                                </div>
+                    </div>
                               </motion.div>
                             </div>
                           </motion.div>
@@ -610,7 +610,7 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                                     <Badge className="bg-green-100 text-green-800">Hot</Badge>
                                   </motion.div>
                                 )}
-                              </div>
+                          </div>
                               <Progress 
                                 value={
                                   salaryInsights.marketDemand === 'High' 
@@ -623,7 +623,7 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                               />
                             </motion.div>
                           </motion.div>
-                        </div>
+                      </div>
 
                         <motion.div 
                           initial={{ opacity: 0 }}
@@ -649,7 +649,7 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                                       <div>
                                         <div className="font-medium">Entry Level</div>
                                         <div className="text-sm text-muted-foreground">0-3 years</div>
-                                      </div>
+                    </div>
                                       <div className="text-right">
                                         <div className="font-bold">
                                           ₹{(salaryInsights.experienceLevels.entry.min / 100000).toFixed(1)}L - 
@@ -671,16 +671,16 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                                       <div>
                                         <div className="font-medium">Mid Level</div>
                                         <div className="text-sm text-muted-foreground">3-6 years</div>
-                                      </div>
+                          </div>
                                       <div className="text-right">
                                         <div className="font-bold">
                                           ₹{(salaryInsights.experienceLevels.mid.min / 100000).toFixed(1)}L - 
                                           {(salaryInsights.experienceLevels.mid.max / 100000).toFixed(1)}L
-                                        </div>
+                      </div>
                                         <div className="text-sm text-muted-foreground">
                                           ₹{Math.round(salaryInsights.experienceLevels.mid.min / 12).toLocaleString('en-IN')} - 
                                           {Math.round(salaryInsights.experienceLevels.mid.max / 12).toLocaleString('en-IN')}/month
-                                        </div>
+                    </div>
                                       </div>
                                     </motion.div>
                                     
@@ -749,14 +749,14 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                                                   <InfoIcon className="w-4 h-4 absolute top-2 right-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 </HoverCardTrigger>
                                                 <HoverCardContent>
-                                                  <div className="space-y-2">
+                      <div className="space-y-2">
                                                     <p className="text-sm">Salary Range in {city.city}:</p>
                                                     <div className="grid grid-cols-2 gap-2 text-sm">
                                                       <div>
                                                         <div className="text-muted-foreground">Annual</div>
                                                         <div className="font-medium">
                                                           ₹{((salaryInsights.baseData.average * city.percentage / 100) / 100000).toFixed(1)}L
-                                                        </div>
+                          </div>
                                                       </div>
                                                       <div>
                                                         <div className="text-muted-foreground">Monthly</div>
@@ -769,9 +769,9 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                                                 </HoverCardContent>
                                               </HoverCard>
                                             </motion.div>
-                                          ))}
-                                      </div>
-                                    </div>
+                        ))}
+                      </div>
+                    </div>
 
                                     {/* Tier 2 Cities */}
                                     <div>
@@ -829,14 +829,14 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                                                 </HoverCardContent>
                                               </HoverCard>
                                             </motion.div>
-                                          ))}
-                                      </div>
-                                    </div>
+                        ))}
+                      </div>
+                    </div>
 
                                     <div className="text-xs text-muted-foreground mt-4">
                                       * Percentages are relative to base salary in Bangalore
-                                    </div>
-                                  </div>
+                    </div>
+                  </div>
                                 </CardContent>
                               </Card>
                             </TabsContent>
@@ -866,7 +866,7 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                                   <div className="font-medium">{skill.skill}</div>
                                   <div className="text-2xl font-bold text-primary">
                                     +{skill.percentage}%
-                                  </div>
+                  </div>
                                   <div className="text-sm text-muted-foreground">
                                     salary premium
                                   </div>
@@ -877,10 +877,10 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                         )}
                       </motion.div>
                     )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
             <NegotiationHelper
               role={jobRole}

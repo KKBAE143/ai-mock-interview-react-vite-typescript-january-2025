@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -16,34 +16,28 @@ export default defineConfig({
   },
   server: {
     port: 5174,
-    strictPort: false,
     host: true,
-    hmr: {
-      timeout: 5000,
-      overlay: true,
+    strictPort: true,
+    watch: {
+      usePolling: true,
     },
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
-    },
+  },
+  define: {
+    // This is needed for Clerk to work properly
+    global: "globalThis",
   },
   optimizeDeps: {
     include: [
-      'react', 
-      'react-dom', 
-      'react-router-dom', 
-      '@hookform/resolvers/zod', 
-      'zustand', 
-      '@radix-ui/react-checkbox', 
-      '@radix-ui/react-toast', 
-      '@radix-ui/react-progress', 
-      '@radix-ui/react-select',
-      'axios'
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@clerk/clerk-react',
+      '@radix-ui/react-icons',
+      '@radix-ui/react-slot',
+      'clsx',
+      'tailwind-merge'
     ],
-    esbuildOptions: {
-      target: 'es2020'
-    }
+    exclude: ['@google/generative-ai']
   },
   build: {
     outDir: 'dist',
@@ -52,10 +46,10 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
-          'ui-vendor': ['@radix-ui/react-select', '@radix-ui/react-slider', '@radix-ui/react-switch', '@radix-ui/react-tabs'],
-          'chart-vendor': ['recharts'],
-        },
-      },
+          'ui-vendor': ['@radix-ui/react-icons', '@radix-ui/react-slot'],
+          'utils-vendor': ['clsx', 'tailwind-merge']
+        }
+      }
     },
   },
   preview: {
