@@ -81,8 +81,6 @@ interface CompanyProfile {
   interviewProcess: {
     stages: string[];
     duration: string;
-    tips: string[];
-    indianContext: string[];
   };
 }
 
@@ -228,18 +226,6 @@ export function CompanySimulator() {
           "Culture Fit & Manager Round"
         ],
         duration: "2-3 weeks",
-        tips: [
-          "Research our tech stack thoroughly",
-          "Prepare system design concepts",
-          "Review our products/services",
-          "Practice coding problems"
-        ],
-        indianContext: [
-          "Be prepared for salary negotiations",
-          "Understand Indian work culture",
-          "Research our Indian market presence",
-          "Know about our local competitors"
-        ]
       }
     };
 
@@ -278,9 +264,7 @@ export function CompanySimulator() {
             "keyProjects": ["notable projects or achievements"],
             "interviewProcess": {
               "stages": ["list of interview stages"],
-              "duration": "typical interview process duration",
-              "tips": ["specific preparation tips"],
-              "indianContext": ["India-specific interview preparation tips"]
+              "duration": "typical interview process duration"
             }
           }
           
@@ -856,45 +840,6 @@ export function CompanySimulator() {
                   </ul>
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          {/* Interview Tips */}
-          <Card className="p-6">
-            <CardContent className="space-y-6">
-              <h4 className="font-medium flex items-center gap-2">
-                <Lightbulb className="w-5 h-5" />
-                Interview Preparation Tips
-              </h4>
-              <ul className="space-y-4">
-                {companyProfile.interviewProcess.tips.map((tip, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 font-medium text-sm">
-                      {index + 1}
-                    </div>
-                    <p className="text-sm text-muted-foreground flex-1">{tip}</p>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card className="p-6">
-            <CardContent className="space-y-6">
-              <h4 className="font-medium flex items-center gap-2">
-                <Building2 className="w-5 h-5" />
-                India-Specific Interview Tips
-              </h4>
-              <ul className="space-y-4">
-                {companyProfile.interviewProcess.indianContext.map((tip, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 font-medium text-sm">
-                      {index + 1}
-                    </div>
-                    <p className="text-sm text-muted-foreground flex-1">{tip}</p>
-                  </li>
-                ))}
-              </ul>
             </CardContent>
           </Card>
 
