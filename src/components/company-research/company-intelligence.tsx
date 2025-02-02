@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   LineChart,
@@ -23,6 +23,10 @@ import {
   DollarSign,
   Award,
   BookOpen,
+  CheckCircle2,
+  Code2,
+  GitBranch,
+  Settings,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +37,19 @@ import { fetchCompanyNews } from "@/lib/news";
 import { fetchIndianSalaryData } from "@/lib/salary";
 import { fetchInterviewExperiences } from "@/lib/interviews";
 import { fetchCertifications } from "@/lib/certifications";
+import { motion } from "framer-motion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { cn } from "@/lib/utils";
 
 interface CompanyNews {
   title: string;
@@ -506,8 +523,11 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                 <Users className="w-5 h-5" />
                 Recent Interview Experiences
               </CardTitle>
+              <CardDescription>
+                Real interview experiences shared by candidates who recently interviewed at {companyName}
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent>
               {loading.experiences ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
@@ -518,222 +538,361 @@ export function CompanyIntelligence({ companyName, industry, jobRole }: CompanyI
                   ))}
                 </div>
               ) : experiences.length > 0 ? (
-                experiences.map((exp, index) => (
-                  <div key={index} className="border-b last:border-0 pb-6 last:pb-0">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold flex items-center gap-2">
-                          {jobRole}
-                          {exp.rating && (
-                            <span className="flex items-center gap-1 text-yellow-500">
-                              <Star className="w-4 h-4 fill-current" />
-                              {exp.rating}
-                            </span>
-                          )}
-                        </h3>
-                        <div className="flex items-center gap-3 text-sm text-muted-foreground mt-2">
-                          {exp.location && (
-                            <span className="flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />
-                              {exp.location}
-                            </span>
-                          )}
-                          {exp.experience && (
-                            <span className="flex items-center gap-1">
-                              <Briefcase className="w-3 h-3" />
-                              {exp.experience} Experience
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {new Date(exp.date).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Badge className={getDifficultyColor(exp.difficulty)}>
-                          {exp.difficulty}
-                        </Badge>
-                        <Badge className={getOutcomeColor(exp.outcome)}>
-                          {exp.outcome}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    <div className="space-y-6">
-                      <div>
-                        <h4 className="text-sm font-medium mb-4">Interview Process</h4>
-                        <div className="space-y-4">
-                          {exp.interviewProcess.map((stage, i) => (
-                            <div key={i} className="border rounded-lg p-4">
-                              <div className="flex items-start gap-3">
-                                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                  {i + 1}
-                                </div>
-                                <div className="space-y-2 flex-1">
-                                  <h5 className="font-medium">{stage.stage}</h5>
-                                  <p className="text-sm text-muted-foreground">{stage.description}</p>
-                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <Clock className="w-3 h-3" />
-                                    {stage.duration}
-                                  </div>
-                                  <div className="mt-3">
-                                    <h6 className="text-xs font-medium mb-2">Focus Areas:</h6>
-                                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                                      {stage.focus.map((item, j) => (
-                                        <li key={j} className="pl-2">
-                                          <span className="ml-[-1.5rem]">•</span> {item}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                  <div className="mt-3">
-                                    <h6 className="text-xs font-medium mb-2">Tips:</h6>
-                                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                                      {stage.tips.map((tip, j) => (
-                                        <li key={j} className="pl-2">
-                                          <span className="ml-[-1.5rem]">•</span> {tip}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                </div>
+                <div className="space-y-8">
+                  {experiences.map((exp, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-center justify-between mb-6">
+                        <div>
+                          <h3 className="text-xl font-semibold flex items-center gap-2">
+                            {jobRole}
+                            {exp.rating && (
+                              <div className="flex items-center gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={cn(
+                                      "w-4 h-4",
+                                      i < exp.rating!
+                                        ? "text-yellow-400 fill-current"
+                                        : "text-gray-300"
+                                    )}
+                                  />
+                                ))}
                               </div>
-                            </div>
-                          ))}
+                            )}
+                          </h3>
+                          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                            {exp.location && (
+                              <HoverCard>
+                                <HoverCardTrigger>
+                                  <span className="flex items-center gap-1 hover:text-primary">
+                                    <MapPin className="w-3 h-3" />
+                                    {exp.location}
+                                  </span>
+                                </HoverCardTrigger>
+                                <HoverCardContent>
+                                  View more interviews from {exp.location}
+                                </HoverCardContent>
+                              </HoverCard>
+                            )}
+                            {exp.experience && (
+                              <span className="flex items-center gap-1">
+                                <Briefcase className="w-3 h-3" />
+                                {exp.experience} Experience
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {new Date(exp.date).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Badge
+                            className={cn(
+                              "text-sm font-medium transition-colors",
+                              getDifficultyColor(exp.difficulty)
+                            )}
+                          >
+                            {exp.difficulty}
+                          </Badge>
+                          <Badge
+                            className={cn(
+                              "text-sm font-medium transition-colors",
+                              getOutcomeColor(exp.outcome)
+                            )}
+                          >
+                            {exp.outcome}
+                          </Badge>
                         </div>
                       </div>
 
-                      <div>
-                        <h4 className="text-sm font-medium mb-4">Technical Questions</h4>
-                        <div className="space-y-4">
-                          {exp.technicalQuestions.map((q, i) => (
-                            <div key={i} className="border rounded-lg p-4">
-                              <Badge className="mb-2">{q.category}</Badge>
-                              <h5 className="font-medium mb-2">{q.question}</h5>
-                              <p className="text-sm text-muted-foreground mb-3">{q.purpose}</p>
-                              {q.exampleAnswer && (
-                                <div className="bg-muted p-3 rounded-md">
-                                  <h6 className="text-xs font-medium mb-1">Example Approach:</h6>
-                                  <p className="text-sm text-muted-foreground">{q.exampleAnswer}</p>
-                                </div>
-                              )}
+                      <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="interview-process">
+                          <AccordionTrigger className="text-lg font-semibold">
+                            Interview Process
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-4 mt-4">
+                              {exp.interviewProcess.map((stage, i) => (
+                                <motion.div
+                                  key={i}
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: i * 0.1 }}
+                                  className="relative pl-8 pb-8 last:pb-0"
+                                >
+                                  <div className="absolute left-0 top-0 bottom-0 w-px bg-border">
+                                    <div className="absolute top-0 left-[-4px] w-2 h-2 rounded-full bg-primary" />
+                                  </div>
+                                  <div className="border rounded-lg p-4 bg-card">
+                                    <div className="flex items-center justify-between mb-3">
+                                      <h4 className="font-medium text-primary">{stage.stage}</h4>
+                                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        {stage.duration}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mb-4">
+                                      {stage.description}
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div>
+                                        <h5 className="text-xs font-medium mb-2 text-primary">Focus Areas</h5>
+                                        <ul className="space-y-1">
+                                          {stage.focus.map((item, j) => (
+                                            <li key={j} className="text-sm text-muted-foreground flex items-start gap-2">
+                                              <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5" />
+                                              {item}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                      <div>
+                                        <h5 className="text-xs font-medium mb-2 text-primary">Tips</h5>
+                                        <ul className="space-y-1">
+                                          {stage.tips.map((tip, j) => (
+                                            <li key={j} className="text-sm text-muted-foreground flex items-start gap-2">
+                                              <BookOpen className="w-4 h-4 text-blue-500 mt-0.5" />
+                                              {tip}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      </div>
+                          </AccordionContent>
+                        </AccordionItem>
 
-                      <div>
-                        <h4 className="text-sm font-medium mb-4">Behavioral Questions</h4>
-                        <div className="space-y-4">
-                          {exp.behavioralQuestions.map((q, i) => (
-                            <div key={i} className="border rounded-lg p-4">
-                              <Badge className="mb-2">{q.category}</Badge>
-                              <h5 className="font-medium mb-2">{q.question}</h5>
-                              <p className="text-sm text-muted-foreground mb-3">{q.purpose}</p>
-                              {q.exampleResponse && (
-                                <div className="bg-muted p-3 rounded-md">
-                                  <h6 className="text-xs font-medium mb-1">Example Response:</h6>
-                                  <p className="text-sm text-muted-foreground">{q.exampleResponse}</p>
-                                </div>
-                              )}
+                        <AccordionItem value="technical-questions">
+                          <AccordionTrigger className="text-lg font-semibold">
+                            Technical Questions
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="grid gap-4 mt-4">
+                              {exp.technicalQuestions.map((q, i) => (
+                                <motion.div
+                                  key={i}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: i * 0.1 }}
+                                  className="border rounded-lg p-4 bg-card"
+                                >
+                                  <div className="flex items-start gap-4">
+                                    <div className="p-2 rounded-full bg-primary/10">
+                                      {q.category === "Coding" ? (
+                                        <Code2 className="w-4 h-4 text-primary" />
+                                      ) : q.category === "System Design" ? (
+                                        <GitBranch className="w-4 h-4 text-primary" />
+                                      ) : (
+                                        <Settings className="w-4 h-4 text-primary" />
+                                      )}
+                                    </div>
+                                    <div className="flex-1">
+                                      <Badge className="mb-2">{q.category}</Badge>
+                                      <h5 className="font-medium mb-2">{q.question}</h5>
+                                      <p className="text-sm text-muted-foreground mb-4">{q.purpose}</p>
+                                      {q.exampleAnswer && (
+                                        <div className="bg-muted/50 rounded-lg p-4">
+                                          <h6 className="text-xs font-medium mb-2 text-primary">Example Approach</h6>
+                                          <p className="text-sm text-muted-foreground">{q.exampleAnswer}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      </div>
+                          </AccordionContent>
+                        </AccordionItem>
 
-                      <div>
-                        <h4 className="text-sm font-medium mb-4">Success Tips</h4>
-                        <div className="space-y-4">
-                          {exp.successTips.map((tip, i) => (
-                            <div key={i} className="border rounded-lg p-4">
-                              <h5 className="font-medium mb-3">{tip.category}</h5>
-                              <div className="space-y-3">
-                                <div>
-                                  <h6 className="text-xs font-medium mb-2">Tips:</h6>
-                                  <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                                    {tip.tips.map((t, j) => (
-                                      <li key={j} className="pl-2">
-                                        <span className="ml-[-1.5rem]">•</span> {t}
+                        <AccordionItem value="behavioral-questions">
+                          <AccordionTrigger className="text-lg font-semibold">
+                            Behavioral Questions
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="grid gap-4 mt-4">
+                              {exp.behavioralQuestions.map((q, i) => (
+                                <motion.div
+                                  key={i}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: i * 0.1 }}
+                                  className="border rounded-lg p-4 bg-card"
+                                >
+                                  <div className="flex items-start gap-4">
+                                    <div className="p-2 rounded-full bg-primary/10">
+                                      {q.category === "Leadership" ? (
+                                        <Users className="w-4 h-4 text-primary" />
+                                      ) : q.category === "Problem Solving" ? (
+                                        <GitBranch className="w-4 h-4 text-primary" />
+                                      ) : (
+                                        <MessageSquare className="w-4 h-4 text-primary" />
+                                      )}
+                                    </div>
+                                    <div className="flex-1">
+                                      <Badge className="mb-2">{q.category}</Badge>
+                                      <h5 className="font-medium mb-2">{q.question}</h5>
+                                      <p className="text-sm text-muted-foreground mb-4">{q.purpose}</p>
+                                      {q.exampleResponse && (
+                                        <div className="bg-muted/50 rounded-lg p-4">
+                                          <h6 className="text-xs font-medium mb-2 text-primary">Example Response</h6>
+                                          <p className="text-sm text-muted-foreground">{q.exampleResponse}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+
+                        <AccordionItem value="success-tips">
+                          <AccordionTrigger className="text-lg font-semibold">
+                            Success Tips
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="grid gap-6 mt-4">
+                              {exp.successTips.map((tip, i) => (
+                                <motion.div
+                                  key={i}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: i * 0.1 }}
+                                  className="border rounded-lg p-4 bg-card"
+                                >
+                                  <h5 className="font-medium text-primary mb-4">{tip.category}</h5>
+                                  <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                      <h6 className="text-xs font-medium mb-2">Tips</h6>
+                                      <ul className="space-y-2">
+                                        {tip.tips.map((t, j) => (
+                                          <li key={j} className="text-sm text-muted-foreground flex items-start gap-2">
+                                            <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5" />
+                                            {t}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                    <div>
+                                      <h6 className="text-xs font-medium mb-2">Examples</h6>
+                                      <ul className="space-y-2">
+                                        {tip.examples.map((e, j) => (
+                                          <li key={j} className="text-sm text-muted-foreground flex items-start gap-2">
+                                            <BookOpen className="w-4 h-4 text-blue-500 mt-0.5" />
+                                            {e}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+
+                        <AccordionItem value="company-insights">
+                          <AccordionTrigger className="text-lg font-semibold">
+                            Company Insights
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="grid gap-6 mt-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <motion.div
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  className="border rounded-lg p-4 bg-card"
+                                >
+                                  <h5 className="font-medium text-primary mb-3">Culture & Values</h5>
+                                  <ul className="space-y-2">
+                                    {[...exp.companyInsights.culture, ...exp.companyInsights.values].map((item, i) => (
+                                      <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                                        <Users className="w-4 h-4 text-purple-500 mt-0.5" />
+                                        {item}
                                       </li>
                                     ))}
                                   </ul>
-                                </div>
-                                <div>
-                                  <h6 className="text-xs font-medium mb-2">Examples:</h6>
-                                  <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                                    {tip.examples.map((e, j) => (
-                                      <li key={j} className="pl-2">
-                                        <span className="ml-[-1.5rem]">•</span> {e}
+                                </motion.div>
+                                <motion.div
+                                  initial={{ opacity: 0, x: 20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  className="border rounded-lg p-4 bg-card"
+                                >
+                                  <h5 className="font-medium text-primary mb-3">Recent Achievements</h5>
+                                  <ul className="space-y-2">
+                                    {exp.companyInsights.recentAchievements.map((item, i) => (
+                                      <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                                        <Award className="w-4 h-4 text-yellow-500 mt-0.5" />
+                                        {item}
                                       </li>
                                     ))}
                                   </ul>
-                                </div>
+                                </motion.div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <motion.div
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: 0.2 }}
+                                  className="border rounded-lg p-4 bg-card"
+                                >
+                                  <h5 className="font-medium text-primary mb-3">Tech Stack</h5>
+                                  <div className="flex flex-wrap gap-2">
+                                    {exp.companyInsights.techStack.map((tech, i) => (
+                                      <Badge
+                                        key={i}
+                                        variant="secondary"
+                                        className="bg-primary/10 hover:bg-primary/20 transition-colors"
+                                      >
+                                        {tech}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </motion.div>
+                                <motion.div
+                                  initial={{ opacity: 0, x: 20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: 0.2 }}
+                                  className="border rounded-lg p-4 bg-card"
+                                >
+                                  <h5 className="font-medium text-primary mb-3">Work Style</h5>
+                                  <ul className="space-y-2">
+                                    {exp.companyInsights.workStyle.map((item, i) => (
+                                      <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                                        <Settings className="w-4 h-4 text-blue-500 mt-0.5" />
+                                        {item}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </motion.div>
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <h4 className="text-sm font-medium mb-4">Company Insights</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="border rounded-lg p-4">
-                            <h5 className="font-medium mb-3">Culture & Values</h5>
-                            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                              {exp.companyInsights.culture.map((item, i) => (
-                                <li key={i} className="pl-2">
-                                  <span className="ml-[-1.5rem]">•</span> {item}
-                                </li>
-                              ))}
-                              {exp.companyInsights.values.map((item, i) => (
-                                <li key={i} className="pl-2">
-                                  <span className="ml-[-1.5rem]">•</span> {item}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div className="border rounded-lg p-4">
-                            <h5 className="font-medium mb-3">Recent Achievements</h5>
-                            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                              {exp.companyInsights.recentAchievements.map((item, i) => (
-                                <li key={i} className="pl-2">
-                                  <span className="ml-[-1.5rem]">•</span> {item}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div className="border rounded-lg p-4">
-                            <h5 className="font-medium mb-3">Tech Stack</h5>
-                            <div className="flex flex-wrap gap-2">
-                              {exp.companyInsights.techStack.map((tech, i) => (
-                                <Badge key={i} variant="secondary">{tech}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="border rounded-lg p-4">
-                            <h5 className="font-medium mb-3">Work Style</h5>
-                            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                              {exp.companyInsights.workStyle.map((item, i) => (
-                                <li key={i} className="pl-2">
-                                  <span className="ml-[-1.5rem]">•</span> {item}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    </motion.div>
+                  ))}
+                </div>
               ) : (
-                <div className="text-center py-8">
+                <div className="text-center py-12">
                   <div className="mb-4">
                     <Users className="w-12 h-12 text-muted-foreground mx-auto" />
                   </div>
                   <h3 className="text-lg font-medium mb-2">No Interview Experiences Yet</h3>
-                  <p className="text-muted-foreground mb-4">
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                     We couldn't find any interview experiences for {companyName} at the moment.
+                    Check back later or be the first to share your experience!
                   </p>
                   <Button onClick={fetchCompanyData} variant="outline" className="gap-2">
                     <MessageSquare className="w-4 h-4" />

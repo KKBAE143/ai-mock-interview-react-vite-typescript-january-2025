@@ -428,245 +428,46 @@ function generateInterviewRounds(role: string, companyTier: string): string[] {
   return rounds;
 }
 
-export async function fetchInterviewExperiences(
-  companyName: string,
-  role: string
-): Promise<InterviewExperience[]> {
+export async function fetchInterviewExperiences(companyName: string, jobRole: string): Promise<InterviewExperience[]> {
   try {
-    console.log('Fetching interview experiences for:', { companyName, role });
-
-    // Try to get real interview data from the AI model
-    const prompt = `
-      Generate recent interview experiences at ${companyName} specifically for the ${role} role in India.
-      Include detailed information about:
-      1. Interview process stages with durations and focus areas
-      2. Technical questions with example answers
-      3. Behavioral questions with example responses
-      4. Success tips with practical examples
-      5. Company culture and tech stack insights
-
-      Format as JSON with complete interview experience details.
-    `;
-
-    const result = await chatSession.sendMessage(prompt);
-    let aiData;
+    // First check if we have base data for this role
+    const roleSpecificData = baseInterviewData[jobRole] || [];
+    
+    // Generate AI response for role-specific experiences
+    const prompt = `Generate detailed interview experiences for ${jobRole} position at ${companyName}. Include specific technical questions, behavioral questions, and success tips relevant to ${jobRole} role.`;
+    
+    const aiResponse = await chatSession(prompt);
+    
+    // Parse and validate AI response
+    let aiExperiences: InterviewExperience[] = [];
     try {
-      aiData = JSON.parse(result.response.text());
-    } catch (e) {
-      const jsonMatch = result.response.text().match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        aiData = JSON.parse(jsonMatch[0]);
-      } else {
-        aiData = { experiences: [] };
-      }
+      aiExperiences = JSON.parse(aiResponse);
+    } catch (error) {
+      console.error("Failed to parse AI response:", error);
+      // Fallback to base data if AI response parsing fails
+      return roleSpecificData.map(exp => ({
+        ...exp,
+        role: jobRole // Ensure role is set correctly
+      }));
     }
     
-    // Get role-specific base data or create new one if doesn't exist
-    const baseData = baseInterviewData[role] ? baseInterviewData[role] : [{
-      role: role,
-      date: new Date().toISOString(),
-      difficulty: "Medium",
-      outcome: "Accepted",
-      location: "Bangalore",
-      experience: "2-3 years",
-      rating: 4,
-      interviewProcess: [
-        {
-          stage: "Initial Screening",
-          description: "HR discussion about your background and role expectations",
-          duration: "30 minutes",
-          focus: [
-            "Resume walkthrough",
-            "Basic qualification verification",
-            "Initial salary expectations",
-            "Notice period discussion"
-          ],
-          tips: [
-            "Prepare a 2-minute pitch about your experience",
-            "Research current salary trends in India",
-            "Have your portfolio ready to share"
-          ]
-        },
-        {
-          stage: "Technical Assessment",
-          description: "Online coding and technical assessment",
-          duration: "2 hours",
-          focus: [
-            "Data Structures & Algorithms",
-            "Role-specific technical skills",
-            "Problem-solving approach",
-            "Code quality and optimization"
-          ],
-          tips: [
-            "Practice coding on platforms like LeetCode",
-            "Focus on time complexity optimization",
-            "Write clean, well-documented code"
-          ]
-        },
-        {
-          stage: "Technical Discussion",
-          description: "Deep dive into technical skills and experience",
-          duration: "1 hour",
-          focus: [
-            "Previous project discussions",
-            "System design concepts",
-            "Technical decision making",
-            "Best practices and patterns"
-          ],
-          tips: [
-            "Prepare to explain your past projects",
-            "Review system design fundamentals",
-            "Be ready to discuss trade-offs"
-          ]
-        },
-        {
-          stage: "Hiring Manager Round",
-          description: "Discussion about team fit and goals",
-          duration: "45 minutes",
-          focus: [
-            "Team collaboration",
-            "Problem-solving approach",
-            "Career aspirations",
-            "Cultural fit"
-          ],
-          tips: [
-            "Research the company's culture",
-            "Prepare questions about team structure",
-            "Have examples of teamwork ready"
-          ]
-        }
-      ],
-      technicalQuestions: [
-        {
-          question: role.toLowerCase().includes('frontend') ? 
-            "Implement a performant infinite scroll with React and TypeScript" :
-            role.toLowerCase().includes('backend') ?
-            "Design and implement a distributed rate limiter" :
-            "Build a full-stack real-time notification system",
-          purpose: "Evaluate coding skills and system design understanding",
-          exampleAnswer: "Discuss implementation approach, optimization techniques, and handling edge cases",
-          category: "Coding"
-        },
-        {
-          question: role.toLowerCase().includes('frontend') ?
-            "Design a scalable component library for multiple brands" :
-            role.toLowerCase().includes('backend') ?
-            "Design a high-throughput message processing system" :
-            "Design a microservices architecture for an e-commerce platform",
-          purpose: "Assess system design and architecture knowledge",
-          exampleAnswer: "Explain architecture decisions, scalability considerations, and trade-offs",
-          category: "System Design"
-        },
-        {
-          question: role.toLowerCase().includes('frontend') ?
-            "Explain your approach to state management and data fetching" :
-            role.toLowerCase().includes('backend') ?
-            "Describe your approach to database sharding and replication" :
-            "Design an OAuth2.0 implementation with refresh token rotation",
-          purpose: "Evaluate architectural decision-making",
-          exampleAnswer: "Compare different approaches, discuss trade-offs, and explain implementation details",
-          category: "Architecture"
-        }
-      ],
-      behavioralQuestions: [
-        {
-          question: "Describe a challenging project you completed recently",
-          purpose: "Assess problem-solving and project management",
-          exampleResponse: "Use STAR method to explain the situation and outcome",
-          category: "Problem Solving"
-        },
-        {
-          question: "How do you handle conflicts in a team?",
-          purpose: "Evaluate teamwork and communication",
-          exampleResponse: "Discuss conflict resolution with specific example",
-          category: "Communication"
-        }
-      ],
-      successTips: [
-        {
-          category: "Technical Preparation",
-          tips: [
-            `Master ${role} fundamentals and best practices`,
-            "Practice coding and system design",
-            "Study modern tech stack and tools"
-          ],
-          examples: [
-            "Complete relevant certifications",
-            "Build portfolio projects",
-            "Contribute to open source"
-          ]
-        },
-        {
-          category: "Interview Strategy",
-          tips: [
-            "Use STAR method for behavioral questions",
-            "Prepare code examples beforehand",
-            "Research company thoroughly"
-          ],
-          examples: [
-            "Document past achievements",
-            "Create technical presentation",
-            "Study company blog posts"
-          ]
-        }
-      ],
-      companyInsights: {
-        culture: [
-          "Focus on innovation",
-          "Collaborative environment",
-          "Learning and growth opportunities"
-        ],
-        values: [
-          "Technical excellence",
-          "Customer focus",
-          "Continuous improvement"
-        ],
-        recentAchievements: [
-          "Successful product launches",
-          "Technology modernization",
-          "Market expansion"
-        ],
-        techStack: [
-          "Modern development tools",
-          "Cloud technologies",
-          "Industry-standard frameworks"
-        ],
-        workStyle: [
-          "Agile methodology",
-          "Regular code reviews",
-          "DevOps practices"
-        ]
-      }
-    }];
-
-    // Add AI-generated experiences
-    const aiExperiences = (aiData.experiences || []).map(exp => ({
-      ...baseData[0], // Start with base data structure
-      role: role,
-      date: new Date().toISOString(),
-      difficulty: determineInterviewDifficulty(exp.rounds?.length || 5, exp.questions?.length || 5),
-      outcome: ["Accepted", "Rejected", "Pending"][Math.floor(Math.random() * 3)],
-      location: exp.location || "Bangalore",
-      experience: exp.experience || "3-5 years",
-      rating: exp.rating || 4,
-      // Override with AI-generated data if available
-      interviewProcess: exp.interviewProcess || baseData[0].interviewProcess,
-      technicalQuestions: exp.technicalQuestions || baseData[0].technicalQuestions,
-      behavioralQuestions: exp.behavioralQuestions || baseData[0].behavioralQuestions,
-      successTips: exp.successTips || baseData[0].successTips,
-      companyInsights: exp.companyInsights || baseData[0].companyInsights
+    // Combine and ensure all experiences have the correct role
+    const combinedExperiences = [...roleSpecificData, ...aiExperiences].map(exp => ({
+      ...exp,
+      role: jobRole // Ensure role is set correctly
     }));
-
-    // Combine and ensure all experiences are for the specified role
-    const allExperiences = [...baseData, ...aiExperiences]
-      .filter(exp => exp.role.toLowerCase() === role.toLowerCase())
-      .slice(0, 5); // Return max 5 experiences
-
-    return allExperiences;
-
+    
+    // Filter to ensure only experiences matching the job role are returned
+    return combinedExperiences.filter(exp => 
+      exp.role.toLowerCase() === jobRole.toLowerCase() ||
+      exp.role.toLowerCase().includes(jobRole.toLowerCase()) ||
+      jobRole.toLowerCase().includes(exp.role.toLowerCase())
+    );
+    
   } catch (error) {
-    console.error('Error fetching interview experiences:', error);
-    return baseInterviewData[role] || [baseData[0]];
+    console.error("Error fetching interview experiences:", error);
+    // Return base data as fallback
+    return baseInterviewData[jobRole] || [];
   }
 }
 
