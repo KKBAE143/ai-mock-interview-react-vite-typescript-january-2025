@@ -1,8 +1,9 @@
 {
-  "name": "ai-mock-interview-react-type",
+  "name": "pinnacle",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "Pinnacle - AI-Powered Interview Platform",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

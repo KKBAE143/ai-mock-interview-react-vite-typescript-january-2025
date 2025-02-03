@@ -19,7 +19,7 @@ interface NewsAPIArticle {
   description: string;
 }
 
-interface NewsAPIResponse {
+type NewsAPIResponse = {
   status: string;
   articles: NewsAPIArticle[];
   code?: string;
@@ -28,59 +28,101 @@ interface NewsAPIResponse {
 
 async function fetchFromNewsAPI(companyName: string, apiKey: string): Promise<NewsItem[]> {
   const today = new Date();
-  // Get news from the last 3 days for more recent coverage
-  const threeDaysAgo = new Date(today);
-  threeDaysAgo.setDate(today.getDate() - 3);
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setDate(today.getDate() - 30);
 
-  // First try top-headlines for most recent news
-  const headlinesResponse = await fetch(
-    `https://newsapi.org/v2/top-headlines?` +
-    `q=${encodeURIComponent(companyName)}` +
-    `&language=en` +
-    `&sortBy=publishedAt` +
-    `&pageSize=5` +
-    `&apiKey=${apiKey}`
-  );
+  // Create company keywords to filter out irrelevant matches
+  const companyKeywords = companyName.split(' ').filter(word => 
+    // Filter out common words that might cause false matches
+    !['tcs', 'ltd', 'limited', 'corp', 'corporation', 'inc', 'incorporated'].includes(word.toLowerCase())
+  ).join(' ');
 
-  const headlinesData: NewsAPIResponse = await headlinesResponse.json();
+  // More targeted search query
+  const searchQuery = `("${companyName}" OR "${companyKeywords}") AND (announcement OR earnings OR acquisition OR launch OR partnership OR investment OR expansion OR quarterly OR financial OR product OR revenue OR growth OR market OR development)`;
 
-  // If we got headlines, use them
-  if (headlinesData.status === 'ok' && headlinesData.articles.length > 0) {
-    return headlinesData.articles.map(article => ({
-      title: article.title,
-      link: article.url,
-      pubDate: article.publishedAt,
-      source: article.source.name,
-      description: article.description || 'No description available'
-    }));
+  // Use domains of reputable business news sources
+  const domains = 'reuters.com,bloomberg.com,ft.com,wsj.com,cnbc.com,businessinsider.com,techcrunch.com,forbes.com,economictimes.indiatimes.com,livemint.com,moneycontrol.com,ndtv.com,business-standard.com,financialexpress.com';
+
+  // Try both top-headlines and everything endpoints with increased page size
+  const [headlinesResponse, everythingResponse] = await Promise.all([
+    fetch(
+      `https://newsapi.org/v2/top-headlines?` +
+      `q=${encodeURIComponent(`"${companyKeywords}"`)}` +
+      `&language=en` +
+      `&sortBy=publishedAt` +
+      `&pageSize=25` +
+      `&apiKey=${apiKey}`
+    ),
+    fetch(
+      `https://newsapi.org/v2/everything?` +
+      `q=${encodeURIComponent(searchQuery)}` +
+      `&domains=${domains}` +
+      `&from=${thirtyDaysAgo.toISOString().split('T')[0]}` +
+      `&to=${today.toISOString().split('T')[0]}` +
+      `&sortBy=relevancy` +
+      `&language=en` +
+      `&pageSize=25` +
+      `&apiKey=${apiKey}`
+    )
+  ]);
+
+  const [headlinesData, everythingData] = await Promise.all([
+    headlinesResponse.json(),
+    everythingResponse.json()
+  ] as [Promise<NewsAPIResponse>, Promise<NewsAPIResponse>]);
+
+  // Handle API errors
+  if (headlinesData.status === 'error' && everythingData.status === 'error') {
+    throw new Error(headlinesData.message || everythingData.message || 'Failed to fetch news');
   }
 
-  // If no headlines, try everything endpoint with recent date filter
-  const response = await fetch(
-    `https://newsapi.org/v2/everything?` +
-    `q=${encodeURIComponent(`${companyName} AND (announcement OR launch OR update OR news)`)}` +
-    `&from=${threeDaysAgo.toISOString().split('T')[0]}` +
-    `&to=${today.toISOString().split('T')[0]}` +
-    `&sortBy=publishedAt` +
-    `&language=en` +
-    `&pageSize=5` +
-    `&apiKey=${apiKey}`
-  );
+  // Combine and filter articles with stricter relevance checks
+  const allArticles = [
+    ...(headlinesData.status === 'ok' ? headlinesData.articles : []),
+    ...(everythingData.status === 'ok' ? everythingData.articles : [])
+  ].filter(article => {
+    const titleLower = article.title?.toLowerCase() || '';
+    const descLower = article.description?.toLowerCase() || '';
+    const companyLower = companyName.toLowerCase();
+    const keywordsLower = companyKeywords.toLowerCase();
 
-  const data: NewsAPIResponse = await response.json();
+    // Check if the article is specifically about the company
+    const isRelevant = (
+      // Must contain company name or keywords in title or first part of description
+      (titleLower.includes(companyLower) || titleLower.includes(keywordsLower) ||
+       (descLower.includes(companyLower) || descLower.includes(keywordsLower))) &&
+      // Must have substantial content
+      article.description?.length > 100 &&
+      // Avoid articles that just mention the company in passing
+      (titleLower.includes(companyLower) || 
+       descLower.indexOf(companyLower) < 100 || 
+       descLower.indexOf(keywordsLower) < 100)
+    );
 
-  if (data.status === 'error') {
-    throw new Error(data.message || 'Failed to fetch news');
-  }
+    return isRelevant;
+  });
 
-  if (data.status === 'ok' && data.articles.length > 0) {
-    return data.articles.map(article => ({
-      title: article.title,
-      link: article.url,
-      pubDate: article.publishedAt,
-      source: article.source.name,
-      description: article.description || 'No description available'
-    }));
+  // Remove duplicates with improved similarity detection
+  const uniqueArticles = allArticles.filter((article, index, self) => {
+    const titleWords = article.title.toLowerCase().split(' ');
+    return index === self.findIndex(a => {
+      const otherTitleWords = a.title.toLowerCase().split(' ');
+      const commonWords = titleWords.filter(word => otherTitleWords.includes(word));
+      return commonWords.length > titleWords.length * 0.7; // 70% similarity threshold
+    });
+  });
+
+  if (uniqueArticles.length > 0) {
+    return uniqueArticles
+      .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+      .slice(0, 10) // Increased from 5 to 10 news items
+      .map(article => ({
+        title: article.title,
+        link: article.url,
+        pubDate: article.publishedAt,
+        source: article.source.name,
+        description: article.description || 'No description available'
+      }));
   }
 
   throw new Error('No recent news found');
@@ -89,49 +131,41 @@ async function fetchFromNewsAPI(companyName: string, apiKey: string): Promise<Ne
 async function generateAINews(companyName: string): Promise<NewsItem[]> {
   const currentDate = new Date().toISOString();
   const fallbackPrompt = `
-    Generate a JSON array of 5 VERY RECENT (today/yesterday) business news items about ${companyName}. Each news item should have:
-    - A realistic title focusing on very recent developments, product launches, or business updates
-    - A "#" for the link
-    - "${currentDate}" for pubDate (representing today)
-    - "AI Business News" for source
-    - A detailed description focusing on current events and developments
+    Generate 5 HIGHLY SPECIFIC and REALISTIC news items about ${companyName} from the last 48 hours.
+    Focus on actual recent developments, product launches, partnerships, or market activities.
     
-    Response format must be exactly:
+    Requirements:
+    1. Each news item must be SPECIFIC to ${companyName}'s actual business activities and industry
+    2. Include real product names, technologies, and business areas where known
+    3. Reference actual market conditions and industry trends
+    4. Use precise details, numbers, and dates from 2025
+    5. Vary the news types: product launches, financial updates, partnerships, industry innovations
+    6. Make descriptions detailed and grounded in the company's real operations
+    
+    Return in this exact JSON format:
     {
       "news": [
         {
-          "title": "Example title",
+          "title": "Specific and realistic title",
           "link": "#",
           "pubDate": "${currentDate}",
           "source": "AI Business News",
-          "description": "Example description"
+          "description": "Detailed, factual description"
         }
       ]
     }
-
-    Requirements for the news items:
-    1. MUST generate exactly 5 news items
-    2. Focus on different aspects: product launches, financial updates, partnerships, technology developments, market trends
-    3. Each description should be 2-3 sentences long
-    4. Use specific details and numbers where appropriate
-    5. Make titles descriptive and newsworthy
-    6. Ensure all information is recent (2025) and plausible
   `;
 
+  const result = await chatSession.sendMessage(fallbackPrompt);
+  
   try {
-    const result = await chatSession.sendMessage(fallbackPrompt);
-    
-    // First try to parse the entire response
-    try {
-      const parsedResponse = JSON.parse(result.response.text());
-      if (parsedResponse.news && Array.isArray(parsedResponse.news)) {
-        return parsedResponse.news;
-      }
-    } catch (parseError) {
-      console.error('Initial parse error:', parseError);
+    // Try parsing the response as JSON first
+    const parsedResponse = JSON.parse(result.response.text());
+    if (parsedResponse.news && Array.isArray(parsedResponse.news)) {
+      return parsedResponse.news;
     }
-
-    // If that fails, try to extract JSON using regex
+  } catch {
+    // If direct parsing fails, try extracting JSON using regex
     const jsonMatch = result.response.text().match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       try {
@@ -139,165 +173,38 @@ async function generateAINews(companyName: string): Promise<NewsItem[]> {
         if (extractedJson.news && Array.isArray(extractedJson.news)) {
           return extractedJson.news;
         }
-      } catch (extractError) {
-        console.error('JSON extraction error:', extractError);
+      } catch (error) {
+        console.error('Failed to extract JSON from AI response:', error);
       }
     }
-
-    // If all parsing attempts fail, return default news items
-    return [
-      {
-        title: `${companyName} Announces Strategic Growth Initiatives`,
-        link: '#',
-        pubDate: currentDate,
-        source: 'AI Business News',
-        description: `${companyName} unveils comprehensive growth strategy for 2025. The company plans to expand its market presence and introduce innovative solutions.`
-      },
-      {
-        title: `${companyName} Reports Strong Q1 2025 Performance`,
-        link: '#',
-        pubDate: currentDate,
-        source: 'AI Business News',
-        description: `Recent financial results show robust growth in key markets. The company exceeded analyst expectations with significant revenue increase.`
-      },
-      {
-        title: `${companyName} Launches New Technology Platform`,
-        link: '#',
-        pubDate: currentDate,
-        source: 'AI Business News',
-        description: `A cutting-edge platform aimed at enhancing customer experience has been released. The new solution incorporates AI and machine learning capabilities.`
-      },
-      {
-        title: `${companyName} Forms Strategic Partnership`,
-        link: '#',
-        pubDate: currentDate,
-        source: 'AI Business News',
-        description: `A new collaboration has been announced to strengthen market position. The partnership focuses on developing next-generation solutions.`
-      },
-      {
-        title: `${companyName} Expands Global Operations`,
-        link: '#',
-        pubDate: currentDate,
-        source: 'AI Business News',
-        description: `The company announces significant expansion of its global footprint. New offices and development centers are being established in key markets.`
-      }
-    ];
-  } catch (error) {
-    console.error('Error generating AI news:', error);
-    throw new Error('Failed to generate company news');
   }
+  
+  throw new Error('Failed to generate valid news data');
 }
 
 export async function fetchCompanyNews(companyName: string): Promise<NewsItem[]> {
+  const API_KEY = import.meta.env.VITE_NEWS_API_KEY;
+  
   try {
-    const API_KEY = import.meta.env.VITE_NEWS_API_KEY;
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-    // Only attempt to fetch from NewsAPI if we're on localhost
-    if (isLocalhost && API_KEY && API_KEY !== 'your_newsapi_key_here') {
+    // Always try NewsAPI first if key is available
+    if (API_KEY && API_KEY !== 'your_newsapi_key_here') {
       try {
         const newsApiResults = await fetchFromNewsAPI(companyName, API_KEY);
         if (newsApiResults.length > 0) {
           return newsApiResults;
         }
       } catch (apiError) {
-        console.error('Error fetching from NewsAPI:', apiError);
+        console.error('NewsAPI error:', apiError);
+        // Continue to AI generation on API error
       }
     }
 
-    // If NewsAPI fails or we're not on localhost, use AI generation
-    console.log('Using AI news generation');
-    const aiNews = await generateAINews(companyName);
-    
-    // Ensure we have at least 5 news items
-    if (aiNews.length < 5) {
-      const currentDate = new Date().toISOString();
-      const defaultNews = [
-        {
-          title: `${companyName} Announces Strategic Growth Initiatives`,
-          link: '#',
-          pubDate: currentDate,
-          source: 'AI Business News',
-          description: `${companyName} unveils comprehensive growth strategy for 2025. The company plans to expand its market presence and introduce innovative solutions.`
-        },
-        {
-          title: `${companyName} Reports Strong Q1 2025 Performance`,
-          link: '#',
-          pubDate: currentDate,
-          source: 'AI Business News',
-          description: `Recent financial results show robust growth in key markets. The company exceeded analyst expectations with significant revenue increase.`
-        },
-        {
-          title: `${companyName} Launches New Technology Platform`,
-          link: '#',
-          pubDate: currentDate,
-          source: 'AI Business News',
-          description: `A cutting-edge platform aimed at enhancing customer experience has been released. The new solution incorporates AI and machine learning capabilities.`
-        },
-        {
-          title: `${companyName} Forms Strategic Partnership`,
-          link: '#',
-          pubDate: currentDate,
-          source: 'AI Business News',
-          description: `A new collaboration has been announced to strengthen market position. The partnership focuses on developing next-generation solutions.`
-        },
-        {
-          title: `${companyName} Expands Global Operations`,
-          link: '#',
-          pubDate: currentDate,
-          source: 'AI Business News',
-          description: `The company announces significant expansion of its global footprint. New offices and development centers are being established in key markets.`
-        }
-      ];
+    // Use AI generation as backup
+    console.log('Falling back to AI news generation');
+    return await generateAINews(companyName);
 
-      // Fill in missing news items with default ones
-      while (aiNews.length < 5) {
-        aiNews.push(defaultNews[aiNews.length]);
-      }
-    }
-
-    return aiNews;
   } catch (error) {
-    console.error("Error in fetchCompanyNews:", error);
-    
-    // Return default news items as absolute last resort
-    const currentDate = new Date().toISOString();
-    return [
-      {
-        title: `${companyName} Announces Strategic Growth Initiatives`,
-        link: '#',
-        pubDate: currentDate,
-        source: 'AI Business News',
-        description: `${companyName} unveils comprehensive growth strategy for 2025. The company plans to expand its market presence and introduce innovative solutions.`
-      },
-      {
-        title: `${companyName} Reports Strong Q1 2025 Performance`,
-        link: '#',
-        pubDate: currentDate,
-        source: 'AI Business News',
-        description: `Recent financial results show robust growth in key markets. The company exceeded analyst expectations with significant revenue increase.`
-      },
-      {
-        title: `${companyName} Launches New Technology Platform`,
-        link: '#',
-        pubDate: currentDate,
-        source: 'AI Business News',
-        description: `A cutting-edge platform aimed at enhancing customer experience has been released. The new solution incorporates AI and machine learning capabilities.`
-      },
-      {
-        title: `${companyName} Forms Strategic Partnership`,
-        link: '#',
-        pubDate: currentDate,
-        source: 'AI Business News',
-        description: `A new collaboration has been announced to strengthen market position. The partnership focuses on developing next-generation solutions.`
-      },
-      {
-        title: `${companyName} Expands Global Operations`,
-        link: '#',
-        pubDate: currentDate,
-        source: 'AI Business News',
-        description: `The company announces significant expansion of its global footprint. New offices and development centers are being established in key markets.`
-      }
-    ];
+    console.error('Error in fetchCompanyNews:', error);
+    throw new Error('Failed to fetch company news. Please try again later.');
   }
 } 

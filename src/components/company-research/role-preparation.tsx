@@ -180,76 +180,77 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
         }
       `;
 
-      const techResult = await chatSession.sendMessage(techPrompt);
-      if (techResult.data) {
-        // Add real documentation links based on technology name
-        const technologies = techResult.data.technologies.map((tech: TechnologyDetails) => {
-          const resources = [];
-          
-          switch (tech.name.toLowerCase()) {
-            case "react":
-              resources.push(
-                {
-                  title: "Official React Documentation",
-                  url: "https://react.dev",
-                  type: "Documentation"
-                },
-                {
-                  title: "React Tutorial",
-                  url: "https://react.dev/learn",
-                  type: "Tutorial"
-                },
-                {
-                  title: "React Course - Meta",
-                  url: "https://www.coursera.org/learn/react-basics",
-                  type: "Course"
-                }
-              );
-              break;
-            case "next.js":
-              resources.push(
-                {
-                  title: "Next.js Documentation",
-                  url: "https://nextjs.org/docs",
-                  type: "Documentation"
-                },
-                {
-                  title: "Learn Next.js",
-                  url: "https://nextjs.org/learn",
-                  type: "Tutorial"
-                }
-              );
-              break;
-            case "typescript":
-              resources.push(
-                {
-                  title: "TypeScript Handbook",
-                  url: "https://www.typescriptlang.org/docs/",
-                  type: "Documentation"
-                },
-                {
-                  title: "TypeScript Tutorial",
-                  url: "https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html",
-                  type: "Tutorial"
-                }
-              );
-              break;
-            // Add more cases for other technologies
-          }
-          
-          return {
-            ...tech,
-            resources: [...tech.resources, ...resources]
-          };
-        });
+      try {
+        const techResult = await chatSession.sendMessage(techPrompt);
+        let techData;
         
-        setTechStack(technologies);
-      } else {
-        throw new Error("Invalid technical stack data format");
+        if (techResult.data) {
+          techData = techResult.data;
+        } else {
+          const jsonMatch = techResult.response.text().match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            techData = JSON.parse(jsonMatch[0]);
+          }
+        }
+
+        if (techData?.technologies) {
+          const technologies = techData.technologies.map((tech: TechnologyDetails) => {
+            const resources = [];
+            
+            switch (tech.name.toLowerCase()) {
+              case "react":
+                resources.push(
+                  {
+                    title: "Official React Documentation",
+                    url: "https://react.dev",
+                    type: "Documentation"
+                  },
+                  {
+                    title: "React Tutorial",
+                    url: "https://react.dev/learn",
+                    type: "Tutorial"
+                  }
+                );
+                break;
+              case "next.js":
+                resources.push(
+                  {
+                    title: "Next.js Documentation",
+                    url: "https://nextjs.org/docs",
+                    type: "Documentation"
+                  },
+                  {
+                    title: "Learn Next.js",
+                    url: "https://nextjs.org/learn",
+                    type: "Tutorial"
+                  }
+                );
+                break;
+              case "typescript":
+                resources.push(
+                  {
+                    title: "TypeScript Handbook",
+                    url: "https://www.typescriptlang.org/docs/",
+                    type: "Documentation"
+                  }
+                );
+                break;
+            }
+            
+            return {
+              ...tech,
+              resources: [...(tech.resources || []), ...resources]
+            };
+          });
+          
+          setTechStack(technologies);
+        }
+      } catch (techError) {
+        console.error("Error fetching tech stack:", techError);
       }
       setLoading(prev => ({ ...prev, tech: false }));
 
-      // Fetch detailed skill requirements
+      // Fetch skill requirements
       const skillsPrompt = `
         Generate detailed skill requirements for ${role} at ${companyName} in this JSON format:
         {
@@ -273,15 +274,28 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
         }
       `;
 
-      const skillsResult = await chatSession.sendMessage(skillsPrompt);
-      if (skillsResult.data) {
-        setSkillAssessments(skillsResult.data.skills);
-      } else {
-        throw new Error("Invalid skills data format");
+      try {
+        const skillsResult = await chatSession.sendMessage(skillsPrompt);
+        let skillsData;
+        
+        if (skillsResult.data) {
+          skillsData = skillsResult.data;
+        } else {
+          const jsonMatch = skillsResult.response.text().match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            skillsData = JSON.parse(jsonMatch[0]);
+          }
+        }
+
+        if (skillsData?.skills) {
+          setSkillAssessments(skillsData.skills);
+        }
+      } catch (skillsError) {
+        console.error("Error fetching skills:", skillsError);
       }
       setLoading(prev => ({ ...prev, skills: false }));
 
-      // Fetch detailed project suggestions with real resources
+      // Fetch project suggestions
       const projectsPrompt = `
         Generate 3-4 advanced and highly specific project suggestions for a ${role} position at ${companyName} in the ${industry} industry.
         Focus on projects that would impress during interviews and demonstrate expertise in the required technologies.
@@ -313,92 +327,85 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
         }
       `;
 
-      console.log('Sending project generation prompt...');
-      const projectsResult = await chatSession.sendMessage(projectsPrompt);
-      console.log('Received project generation response:', projectsResult);
-
-      if (projectsResult.data && Array.isArray(projectsResult.data.projects)) {
-        console.log('Processing projects data...');
-        const projectsWithResources = projectsResult.data.projects.map((project: ProjectDetails) => {
-          console.log('Processing project:', project.title);
-          
-          // Validate project structure
-          if (!project.title || !project.description || !Array.isArray(project.skills)) {
-            console.error('Invalid project structure:', project);
-            return null;
-          }
-
-          const resources = [];
-          
-          // Add real-world resources based on project type and skills
-          project.skills.forEach((skill: string) => {
-            console.log('Processing skill:', skill);
-            // Add skill-specific resources
-            switch (skill.toLowerCase()) {
-              case "react":
-                resources.push({
-                  title: "React Documentation",
-                  url: "https://react.dev",
-                  type: "Documentation"
-                });
-                break;
-              case "typescript":
-                resources.push({
-                  title: "TypeScript Handbook",
-                  url: "https://www.typescriptlang.org/docs/",
-                  type: "Documentation"
-                });
-                break;
-              case "next.js":
-                resources.push({
-                  title: "Next.js Documentation",
-                  url: "https://nextjs.org/docs",
-                  type: "Documentation"
-                });
-                break;
-              // Add more cases as needed
-            }
-          });
-
-          // Ensure all required fields are present
-          return {
-            title: project.title,
-            description: project.description,
-            skills: project.skills,
-            difficulty: project.difficulty || "Advanced",
-            timeEstimate: project.timeEstimate || "2-3 months",
-            objectives: project.objectives || [],
-            implementation: project.implementation || {
-              steps: [],
-              bestPractices: []
-            },
-            businessValue: project.businessValue || [],
-            technicalChallenges: project.technicalChallenges || [],
-            advancedFeatures: project.advancedFeatures || [],
-            systemDesign: project.systemDesign || {
-              architecture: "",
-              components: [],
-              dataFlow: "",
-              scalability: ""
-            },
-            resources: resources.slice(0, 5) // Limit to 5 most relevant resources
-          };
-        }).filter(Boolean); // Remove any null projects
-
-        console.log('Setting projects state with:', projectsWithResources);
-        if (projectsWithResources.length > 0) {
-          setProjects(projectsWithResources);
+      try {
+        const projectsResult = await chatSession.sendMessage(projectsPrompt);
+        let projectsData;
+        
+        if (projectsResult.data) {
+          projectsData = projectsResult.data;
         } else {
-          throw new Error("No valid projects generated");
+          const jsonMatch = projectsResult.response.text().match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            projectsData = JSON.parse(jsonMatch[0]);
+          }
         }
-      } else {
-        console.error('Invalid projects data format:', projectsResult);
-        throw new Error("Invalid projects data format");
+
+        if (projectsData?.projects) {
+          const projectsWithResources = projectsData.projects.map((project: ProjectDetails) => {
+            if (!project.title || !project.description || !Array.isArray(project.skills)) {
+              return null;
+            }
+
+            const resources: any[] = [];
+            project.skills.forEach((skill: string) => {
+              switch (skill.toLowerCase()) {
+                case "react":
+                  resources.push({
+                    title: "React Documentation",
+                    url: "https://react.dev",
+                    type: "Documentation"
+                  });
+                  break;
+                case "typescript":
+                  resources.push({
+                    title: "TypeScript Handbook",
+                    url: "https://www.typescriptlang.org/docs/",
+                    type: "Documentation"
+                  });
+                  break;
+                case "next.js":
+                  resources.push({
+                    title: "Next.js Documentation",
+                    url: "https://nextjs.org/docs",
+                    type: "Documentation"
+                  });
+                  break;
+              }
+            });
+
+            return {
+              ...project,
+              difficulty: project.difficulty || "Advanced",
+              timeEstimate: project.timeEstimate || "2-3 months",
+              objectives: project.objectives || [],
+              implementation: project.implementation || {
+                steps: [],
+                bestPractices: []
+              },
+              businessValue: project.businessValue || [],
+              technicalChallenges: project.technicalChallenges || [],
+              advancedFeatures: project.advancedFeatures || [],
+              systemDesign: project.systemDesign || {
+                architecture: "",
+                components: [],
+                dataFlow: "",
+                scalability: ""
+              },
+              resources: resources.slice(0, 5)
+            };
+          }).filter(Boolean);
+
+          if (projectsWithResources.length > 0) {
+            setProjects(projectsWithResources);
+          }
+        }
+      } catch (projectsError) {
+        console.error("Error fetching projects:", projectsError);
       }
       setLoading(prev => ({ ...prev, projects: false }));
 
     } catch (error) {
-      console.error("Error fetching role data:", error);
+      console.error("Error in fetchRoleData:", error);
       toast.error("Failed to fetch role preparation data. Please try again.");
       setLoading({
         tech: false,

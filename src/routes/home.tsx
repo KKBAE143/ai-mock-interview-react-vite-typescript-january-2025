@@ -138,8 +138,8 @@ const HomePage = () => {
                 transition={{ delay: 0.2 }}
               >
                 <Badge className="mb-4 px-6 py-2.5 text-sm bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 hover:from-purple-200 hover:to-purple-300 transition-all duration-300 shadow-sm">
-                  ✨ Next-Gen Interview Platform
-            </Badge>
+                  🚀 Outperform 90% of Candidates
+                </Badge>
               </motion.div>
               
               <motion.h1 
@@ -149,12 +149,12 @@ const HomePage = () => {
                 transition={{ delay: 0.3 }}
               >
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-primary to-indigo-600 animate-gradient">
-                  Master Your
-              </span>
-              <br />
+                  Crush Every
+                </span>
+                <br />
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-primary to-purple-600 animate-gradient">
-                  Dream Career
-              </span>
+                  Tech Interview
+                </span>
               </motion.h1>
 
               <motion.p 
@@ -163,7 +163,7 @@ const HomePage = () => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
               >
-                Ace your interviews with AI-powered excellence and real-time feedback
+                Don't just prepare, dominate. Our AI turns interview anxiety into unstoppable confidence.
               </motion.p>
 
               <div className="mt-12 space-y-4">
