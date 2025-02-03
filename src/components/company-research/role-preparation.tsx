@@ -454,7 +454,7 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
   };
 
   function TechnologyCard({ tech }: { tech: TechnologyDetails }) {
-    return (
+  return (
       <Dialog>
         <DialogTrigger asChild>
           <div className="group relative flex items-center gap-4 rounded-lg border bg-card p-4 hover:shadow-lg transition-all cursor-pointer">
@@ -468,19 +468,19 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
                   tech.importance === "High" ? "bg-red-500" :
                   tech.importance === "Medium" ? "bg-yellow-500" : "bg-green-500"
                 )} />
-              </div>
-            </div>
+                      </div>
+                  </div>
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-lg truncate">
                     {tech.name}
                   </h3>
-                  {tech.version && (
+                              {tech.version && (
                     <span className="text-xs text-muted-foreground">v{tech.version}</span>
-                  )}
-                </div>
+                              )}
+                            </div>
                 <div className="flex items-center gap-2">
                   <div className="text-sm font-medium text-primary">{tech.proficiency}%</div>
                 </div>
@@ -489,7 +489,7 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
                 {tech.description}
               </p>
             </div>
-          </div>
+                          </div>
         </DialogTrigger>
         
         <DialogContent className="sm:max-w-[600px]">
@@ -506,16 +506,16 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
                 "px-2 py-0.5",
                 getImportanceColor(tech.importance)
               )}>
-                {tech.importance}
-              </Badge>
-            </div>
+                            {tech.importance}
+                          </Badge>
+                        </div>
             <DialogDescription>
               {tech.description}
             </DialogDescription>
           </DialogHeader>
           
           <div className="mt-6 space-y-6">
-            <div className="space-y-2">
+                        <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Proficiency Level</span>
                 <span className="text-sm font-medium text-primary">{tech.proficiency}%</span>
@@ -572,19 +572,19 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
                       <span className="text-sm">{tool}</span>
                     </div>
                   ))}
-                </div>
-              </div>
+                          </div>
+                        </div>
             )}
 
             <div className="space-y-3">
               <h4 className="text-sm font-medium">Learning Resources</h4>
-              <div className="grid gap-2">
-                {tech.resources.map((resource, i) => (
-                  <a
-                    key={i}
-                    href={resource.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                          <div className="grid gap-2">
+                            {tech.resources.map((resource, i) => (
+                              <a
+                                key={i}
+                                href={resource.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
                     className="group flex items-center justify-between rounded-lg border bg-card p-3 transition-colors hover:bg-accent"
                   >
                     <div className="flex items-center gap-3">
@@ -613,13 +613,13 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
                           {resource.type}
                         </p>
                       </div>
-                    </div>
+                                </div>
                     <ExternalLink className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
         </DialogContent>
       </Dialog>
     );
@@ -708,17 +708,17 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
         </CardHeader>
         <CardContent>
           <div className="space-y-8">
-            {loading.skills ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-20 bg-gray-200 rounded w-full"></div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              skillAssessments.map((skill, index) => (
+          {loading.skills ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-20 bg-gray-200 rounded w-full"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            skillAssessments.map((skill, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
@@ -726,74 +726,74 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
                   transition={{ delay: index * 0.1 }}
                   className="space-y-4 p-4 border rounded-lg"
                 >
-                  <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-medium">{skill.name}</h4>
+                    <h4 className="font-medium">{skill.name}</h4>
                       <p className="text-sm text-muted-foreground">
                         Estimated time to acquire: {skill.timeToAcquire}
                       </p>
-                    </div>
+                  </div>
                     <Badge className={getImportanceColor(skill.importance)}>
                       {skill.importance}
                     </Badge>
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
                       <span>Required Proficiency</span>
-                      <span>{skill.level}%</span>
-                    </div>
-                    <Progress value={skill.level} className="h-2" />
+                    <span>{skill.level}%</span>
                   </div>
+                  <Progress value={skill.level} className="h-2" />
+                </div>
 
-                  {skill.dependencies.length > 0 && (
+                {skill.dependencies.length > 0 && (
                     <div>
                       <h5 className="text-sm font-medium mb-2">Prerequisites</h5>
-                      <div className="flex flex-wrap gap-2">
-                        {skill.dependencies.map((dep, i) => (
-                          <Badge key={i} variant="secondary">
-                            {dep}
-                          </Badge>
-                        ))}
-                      </div>
+                    <div className="flex flex-wrap gap-2">
+                      {skill.dependencies.map((dep, i) => (
+                        <Badge key={i} variant="secondary">
+                          {dep}
+                        </Badge>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
                   <div className="space-y-3">
                     <h5 className="text-sm font-medium">Learning Path</h5>
                     <div className="space-y-4">
-                      {skill.learningPath.map((stage, i) => (
+                    {skill.learningPath.map((stage, i) => (
                         <div
                           key={i}
                           className="relative pl-6 pb-4 last:pb-0 border-l border-border last:border-l-transparent"
                         >
                           <div className="absolute left-[-4px] top-1 w-2 h-2 rounded-full bg-primary" />
                           <div className="space-y-1">
-                            <div className="flex items-center justify-between">
-                              <h6 className="font-medium text-sm">{stage.stage}</h6>
+                          <div className="flex items-center justify-between">
+                            <h6 className="font-medium text-sm">{stage.stage}</h6>
                               <span className="text-xs text-muted-foreground">
                                 {stage.duration}
                               </span>
-                            </div>
+                          </div>
                             <ul className="space-y-1">
-                              {stage.resources.map((resource, j) => (
+                            {stage.resources.map((resource, j) => (
                                 <li
                                   key={j}
                                   className="text-sm text-muted-foreground flex items-start gap-2"
                                 >
                                   <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5" />
-                                  {resource}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+                                {resource}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
+                </div>
                 </motion.div>
-              ))
-            )}
+            ))
+          )}
           </div>
         </CardContent>
       </Card>
@@ -811,17 +811,17 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
         </CardHeader>
         <CardContent>
           <div className="space-y-8">
-            {loading.projects ? (
+          {loading.projects ? (
               <div className="space-y-6">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="animate-pulse">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="animate-pulse">
                     <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
                     <div className="h-40 bg-gray-200 rounded w-full"></div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              projects.map((project, index) => (
+                </div>
+              ))}
+            </div>
+          ) : (
+            projects.map((project, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
@@ -837,10 +837,10 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
                           {project.description}
                         </p>
                       </div>
-                      <Badge className={getDifficultyColor(project.difficulty)}>
-                        {project.difficulty}
-                      </Badge>
-                    </div>
+                  <Badge className={getDifficultyColor(project.difficulty)}>
+                    {project.difficulty}
+                  </Badge>
+                </div>
 
                     <div className="flex flex-wrap gap-2">
                       {project.skills.map((skill, i) => (
@@ -885,7 +885,7 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
                         </ul>
                       </div>
 
-                      <div>
+                  <div>
                         <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
                           <Briefcase className="w-4 h-4 text-primary" />
                           Business Value
@@ -923,7 +923,7 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
                           <div className="space-y-1">
                             <span className="font-medium">Data Flow:</span>
                             <p className="text-muted-foreground">{project.systemDesign.dataFlow}</p>
-                          </div>
+                            </div>
                           <div className="space-y-1">
                             <span className="font-medium">Scalability:</span>
                             <p className="text-muted-foreground">{project.systemDesign.scalability}</p>
@@ -982,15 +982,15 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
                       </div>
                     </div>
 
-                    <div>
+                  <div>
                       <h4 className="text-sm font-medium mb-2">Learning Resources</h4>
-                      <div className="grid gap-2">
-                        {project.resources.map((resource, i) => (
-                          <a
-                            key={i}
-                            href={resource.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                    <div className="grid gap-2">
+                      {project.resources.map((resource, i) => (
+                        <a
+                          key={i}
+                          href={resource.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
                             className="flex items-center justify-between p-3 text-sm border rounded-lg hover:bg-accent transition-colors group"
                           >
                             <div className="flex items-center gap-3">
@@ -1015,23 +1015,23 @@ export function RolePreparation({ companyName, role, industry }: RolePreparation
                                 <p className="font-medium leading-none">{resource.title}</p>
                                 <p className="text-xs text-muted-foreground">{resource.type}</p>
                               </div>
-                            </div>
+                          </div>
                             <ExternalLink className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
-                          </a>
-                        ))}
-                      </div>
+                        </a>
+                      ))}
                     </div>
+                  </div>
 
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4" />
                         <span>Estimated time: {project.timeEstimate}</span>
                       </div>
-                    </div>
-                  </div>
+                </div>
+              </div>
                 </motion.div>
-              ))
-            )}
+            ))
+          )}
           </div>
         </CardContent>
       </Card>

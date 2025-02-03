@@ -1,0 +1,1 @@
+// This file can be deleted as we're using the Web Speech API directly in the browser 
