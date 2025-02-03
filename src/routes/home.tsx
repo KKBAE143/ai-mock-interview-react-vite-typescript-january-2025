@@ -139,7 +139,7 @@ const HomePage = () => {
               >
                 <Badge className="mb-4 px-6 py-2.5 text-sm bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 hover:from-purple-200 hover:to-purple-300 transition-all duration-300 shadow-sm">
                   ✨ Next-Gen Interview Platform
-                </Badge>
+            </Badge>
               </motion.div>
               
               <motion.h1 
@@ -150,11 +150,11 @@ const HomePage = () => {
               >
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-primary to-indigo-600 animate-gradient">
                   Master Your
-                </span>
-                <br />
+              </span>
+              <br />
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-primary to-purple-600 animate-gradient">
                   Dream Career
-                </span>
+              </span>
               </motion.h1>
 
               <motion.p 
@@ -209,18 +209,18 @@ const HomePage = () => {
               </div>
 
               <div className="mt-12 flex flex-wrap gap-4">
-                <Link to="/generate">
+              <Link to="/generate">
                   <Button size="lg" className="group bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 px-8 py-6 rounded-xl transform hover:scale-105">
                     Start Free Practice
                     <Sparkles className="ml-2 w-5 h-5 group-hover:rotate-12 transition-transform" />
-                  </Button>
-                </Link>
-                <Link to="/about-us">
+                </Button>
+              </Link>
+              <Link to="/about-us">
                   <Button size="lg" variant="outline" className="group bg-white/90 hover:bg-white border-2 hover:border-purple-300 px-8 py-6 rounded-xl transform hover:scale-105 transition-all duration-300">
                     Watch Demo
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
+                </Button>
+              </Link>
               </div>
 
               <div className="mt-12 flex flex-wrap items-center gap-4">
@@ -282,7 +282,7 @@ const HomePage = () => {
 
       {/* Statistics Section */}
       <section className={`${sectionClass} ${gradientBgLight}`}>
-        <Container>
+      <Container>
           <SectionHeading
             badge="📊 Platform Stats"
             title="Empowering Your Interview Success"
@@ -293,32 +293,32 @@ const HomePage = () => {
             <Statistic value="50+" label="Practice Sessions" />
             <Statistic value="100+" label="Questions Answered" />
             <Statistic value="95%" label="User Satisfaction" />
-            <Statistic value="24/7" label="AI Support" />
-          </div>
+          <Statistic value="24/7" label="AI Support" />
+        </div>
         </Container>
         <BackgroundDecoration />
       </section>
 
-      {/* Hero Image Section */}
+        {/* Hero Image Section */}
       <section className="relative py-16 overflow-hidden bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
         <Container className="relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
             className="rounded-3xl overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-800"
-          >
+        >
             <div className="relative">
               {/* Background Image with Overlay */}
               <div className="absolute inset-0">
-                <img
-                  src="/assets/img/hero.jpg"
-                  alt="AI Interview Platform"
+          <img
+            src="/assets/img/hero.jpg"
+            alt="AI Interview Platform"
                   className="w-full h-full object-cover opacity-40"
-                  loading="lazy"
-                />
+            loading="lazy"
+          />
                 <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/95 to-transparent" />
-              </div>
+          </div>
 
               {/* Content Grid */}
               <div className="relative grid lg:grid-cols-2 gap-8 p-8 md:p-12">
@@ -356,7 +356,7 @@ const HomePage = () => {
                     transition={{ delay: 0.4 }}
                     className="text-lg text-gray-300"
                   >
-                    Get real-time feedback and personalized coaching from our advanced AI system.
+              Get real-time feedback and personalized coaching from our advanced AI system.
                     Perfect your responses and boost your confidence.
                   </motion.p>
 
@@ -444,9 +444,9 @@ const HomePage = () => {
                   <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl" />
                 </div>
               </div>
-            </div>
-          </motion.div>
-        </Container>
+          </div>
+        </motion.div>
+      </Container>
 
         {/* Enhanced Background Effects */}
         <div className="absolute inset-0 -z-10">
@@ -623,8 +623,8 @@ const HomePage = () => {
                 </div>
               </motion.div>
             ))}
-          </div>
-        </Container>
+        </div>
+      </Container>
         <BackgroundDecoration />
       </section>
 
@@ -816,7 +816,7 @@ const HomePage = () => {
                 ))}
               </div>
             </motion.div>
-          </div>
+      </div>
 
           {/* Call to Action */}
           <motion.div
@@ -842,10 +842,10 @@ const HomePage = () => {
       {/* Final CTA Section */}
       <section className="py-16 bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 relative overflow-hidden">
         <Container className="max-w-4xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
             className="relative z-10 text-center"
           >
             <Badge className="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm bg-white/10 backdrop-blur-sm text-white border-white/20 mb-6">
@@ -865,7 +865,7 @@ const HomePage = () => {
             </p>
             
             <div className="flex flex-wrap justify-center gap-4 mb-8">
-              <Link to="/generate">
+            <Link to="/generate">
                 <Button size="lg" className="group bg-white hover:bg-purple-50 text-gray-900 shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3 rounded-xl transform hover:scale-105">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-purple-600" />
@@ -883,10 +883,10 @@ const HomePage = () => {
                     <ArrowRight className="w-5 h-5" />
                     <span className="font-semibold">Learn More</span>
                   </div>
-                </Button>
-              </Link>
-            </div>
-
+              </Button>
+            </Link>
+          </div>
+          
             <div className="flex flex-wrap justify-center gap-6 text-sm">
               <div className="flex items-center gap-1.5 text-white/90">
                 <Check className="w-4 h-4" />
@@ -900,9 +900,9 @@ const HomePage = () => {
                 <Check className="w-4 h-4" />
                 <span>24/7 AI Support</span>
               </div>
-            </div>
-          </motion.div>
-        </Container>
+          </div>
+        </motion.div>
+      </Container>
 
         {/* Subtle background effects */}
         <div className="absolute inset-0 -z-10 overflow-hidden">
