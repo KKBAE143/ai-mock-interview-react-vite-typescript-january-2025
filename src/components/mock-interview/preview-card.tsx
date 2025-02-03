@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Mic, MessageSquare, Check, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -190,171 +190,300 @@ export function PreviewCard({ onSubmitAnswer }: PreviewCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto relative overflow-hidden"
+    >
+      {/* Decorative Background Elements */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-b from-purple-100/20 to-transparent rounded-full blur-3xl -z-10" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-t from-blue-100/20 to-transparent rounded-full blur-3xl -z-10" />
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <motion.div 
+        className="flex items-center justify-between mb-6"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
         <h2 className="text-xl font-semibold text-gray-900">Mock Interview</h2>
-        <div className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-sm font-medium">
+        <motion.div
+          className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-sm font-medium"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
           Live Demo
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Question with Refresh Button */}
-      <div className="bg-gray-50 rounded-lg p-4 mb-6">
+      <motion.div 
+        className="bg-gray-50 rounded-lg p-4 mb-6 relative group hover:shadow-md transition-shadow duration-300"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
         <div className="flex justify-between items-start gap-4">
           <p className="text-gray-900 font-medium flex-grow">
             "{currentQuestion}"
           </p>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={generateNewQuestion}
-            className="shrink-0 text-gray-500 hover:text-gray-700"
-            disabled={isRecording || isProcessing}
+          <motion.div
+            whileHover={{ rotate: 180 }}
+            transition={{ duration: 0.3 }}
           >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={generateNewQuestion}
+              className="shrink-0 text-gray-500 hover:text-gray-700 transition-colors"
+              disabled={isRecording || isProcessing}
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Answer Input */}
-      <div className="space-y-2 mb-4">
+      <motion.div 
+        className="space-y-2 mb-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
         <div className="flex justify-between items-center">
           <label className="text-sm font-medium text-gray-700">Your Answer</label>
-          {answer && <span className="text-xs text-gray-500">{answer.length} characters</span>}
+          <AnimatePresence>
+            {answer && (
+              <motion.span 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="text-xs text-gray-500"
+              >
+                {answer.length} characters
+              </motion.span>
+            )}
+          </AnimatePresence>
         </div>
         <Textarea
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           placeholder={isTyping ? "Type your answer here..." : "Click Record or Type to start..."}
-          className="min-h-[100px] resize-none"
+          className="min-h-[100px] resize-none transition-all duration-300 focus:shadow-md"
           disabled={isRecording || isProcessing}
         />
-      </div>
+      </motion.div>
 
       {/* Status Indicators */}
-      {(isRecording || isTyping || isProcessing) && (
-        <div className="flex items-center gap-2 text-sm mb-4">
-          {isRecording && (
-            <span className="flex items-center gap-2 text-purple-600">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                <span className="rounded-full h-2 w-2 bg-purple-600"></span>
-              </span>
-              Recording...
-            </span>
-          )}
-          {isTyping && !isRecording && (
-            <span className="text-blue-600">Type mode active</span>
-          )}
-          {isProcessing && (
-            <span className="flex items-center gap-2 text-blue-600">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Processing...
-            </span>
-          )}
-        </div>
-      )}
+      <AnimatePresence>
+        {(isRecording || isTyping || isProcessing) && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex items-center gap-2 text-sm mb-4 overflow-hidden"
+          >
+            {isRecording && (
+              <motion.span 
+                className="flex items-center gap-2 text-purple-600"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+              >
+                <span className="relative flex h-2 w-2">
+                  <motion.span 
+                    className="absolute h-full w-full rounded-full bg-purple-400"
+                    animate={{ 
+                      scale: [1, 1.5, 1],
+                      opacity: [1, 0.5, 1] 
+                    }}
+                    transition={{ 
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  <span className="rounded-full h-2 w-2 bg-purple-600" />
+                </span>
+                Recording...
+              </motion.span>
+            )}
+            {isTyping && !isRecording && (
+              <motion.span 
+                className="text-blue-600"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+              >
+                Type mode active
+              </motion.span>
+            )}
+            {isProcessing && (
+              <motion.span 
+                className="flex items-center gap-2 text-blue-600"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+              >
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Processing...
+              </motion.span>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Action Buttons */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <motion.div 
+        className="grid grid-cols-2 gap-3 mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
         {!isTyping ? (
           <>
-            <Button
-              variant={isRecording ? "destructive" : "outline"}
-              onClick={isRecording ? stopRecording : startRecording}
-              disabled={isProcessing}
-              className="flex items-center gap-2"
-            >
-              <Mic className="w-4 h-4" />
-              {isRecording ? "Stop" : "Record"}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={startTyping}
-              disabled={isProcessing || isRecording}
-              className="flex items-center gap-2"
-            >
-              <MessageSquare className="w-4 h-4" />
-              Type
-            </Button>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                variant={isRecording ? "destructive" : "outline"}
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={isProcessing}
+                className="w-full flex items-center gap-2 transition-all duration-300"
+              >
+                <Mic className="w-4 h-4" />
+                {isRecording ? "Stop" : "Record"}
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                variant="outline"
+                onClick={startTyping}
+                disabled={isProcessing || isRecording}
+                className="w-full flex items-center gap-2 transition-all duration-300"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Type
+              </Button>
+            </motion.div>
           </>
         ) : (
           <>
-            <Button
-              variant="outline"
-              onClick={() => setIsTyping(false)}
-              disabled={isProcessing}
-              className="flex items-center gap-2"
-            >
-              <Mic className="w-4 h-4" />
-              Switch to Record
-            </Button>
-            <Button
-              variant="default"
-              onClick={handleSubmit}
-              disabled={isProcessing || !answer.trim()}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600"
-            >
-              {isProcessing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Check className="w-4 h-4" />
-              )}
-              Submit
-            </Button>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                variant="outline"
+                onClick={() => setIsTyping(false)}
+                disabled={isProcessing}
+                className="w-full flex items-center gap-2 transition-all duration-300"
+              >
+                <Mic className="w-4 h-4" />
+                Switch to Record
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                variant="default"
+                onClick={handleSubmit}
+                disabled={isProcessing || !answer.trim()}
+                className="w-full flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all duration-300"
+              >
+                {isProcessing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4" />
+                )}
+                Submit
+              </Button>
+            </motion.div>
           </>
         )}
-      </div>
+      </motion.div>
 
       {/* Feedback Section */}
-      {feedback && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="border-t pt-4"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">Feedback</h3>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Score:</span>
-              <span className={`text-lg font-bold ${feedback.score >= 60 ? 'text-green-600' : feedback.score >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
-                {feedback.score}/100
-              </span>
-            </div>
-          </div>
+      <AnimatePresence>
+        {feedback && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="border-t pt-4"
+          >
+            <motion.div 
+              className="flex items-center justify-between mb-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <h3 className="font-semibold text-gray-900">Feedback</h3>
+              <motion.div 
+                className="flex items-center gap-2"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, type: "spring" }}
+              >
+                <span className="text-sm text-gray-600">Score:</span>
+                <span className={`text-lg font-bold ${
+                  feedback.score >= 60 ? 'text-green-600' : 
+                  feedback.score >= 40 ? 'text-amber-600' : 
+                  'text-red-600'
+                }`}>
+                  {feedback.score}/100
+                </span>
+              </motion.div>
+            </motion.div>
 
-          <p className="text-gray-700 mb-4">{feedback.feedback}</p>
+            <motion.p 
+              className="text-gray-700 mb-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              {feedback.feedback}
+            </motion.p>
 
-          <div className={`${feedback.strengths?.length > 0 ? 'grid grid-cols-2' : ''} gap-4`}>
-            {feedback.strengths?.length > 0 && (
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Strengths</h4>
+            <motion.div 
+              className={`${feedback.strengths?.length > 0 ? 'grid grid-cols-2' : ''} gap-4`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              {feedback.strengths?.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Strengths</h4>
+                  <ul className="space-y-2">
+                    {feedback.strengths.map((strength: string, index: number) => (
+                      <motion.li
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.6 + index * 0.1 }}
+                        className="flex items-start gap-2 text-sm text-gray-700"
+                      >
+                        <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                        {strength}
+                      </motion.li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              <div className={`${!feedback.strengths?.length ? 'w-full' : ''}`}>
+                <h4 className="font-medium text-gray-900 mb-2">Areas to Improve</h4>
                 <ul className="space-y-2">
-                  {feedback.strengths.map((strength: string, index: number) => (
-                    <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
-                      <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-                      {strength}
-                    </li>
+                  {feedback.improvements.map((improvement: string, index: number) => (
+                    <motion.li
+                      key={index}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 + index * 0.1 }}
+                      className="flex items-start gap-2 text-sm text-gray-700"
+                    >
+                      <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                      {improvement}
+                    </motion.li>
                   ))}
                 </ul>
               </div>
-            )}
-            
-            <div className={`${!feedback.strengths?.length ? 'w-full' : ''}`}>
-              <h4 className="font-medium text-gray-900 mb-2">Areas to Improve</h4>
-              <ul className="space-y-2">
-                {feedback.improvements.map((improvement: string, index: number) => (
-                  <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
-                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                    {improvement}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 } 
