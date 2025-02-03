@@ -258,18 +258,12 @@ const HomePage = () => {
               <PreviewCard 
                 onSubmitAnswer={async (answer) => {
                   try {
-                    const response = await fetch("/api/mock-interview/feedback", {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({ answer }),
-                    });
-                    const data = await response.json();
-                    // Handle the feedback response
-                    // You can use a modal or a toast to show the feedback
+                    // The feedback is now handled in the PreviewCard component
+                    // This callback is just for any additional processing you want to do
+                    // For example, saving to a database, analytics, etc.
+                    console.log("Answer submitted:", answer);
                   } catch (error) {
-                    console.error("Failed to get feedback:", error);
+                    console.error("Error in onSubmitAnswer:", error);
                     throw error;
                   }
                 }}
