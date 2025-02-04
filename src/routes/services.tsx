@@ -19,39 +19,41 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import React from "react";
+import { Check } from "lucide-react";
+import { Briefcase, Star, Volume2 } from "lucide-react";
 
 const services = [
   {
     title: "AI Mock Interviews",
-    description: "Practice with our advanced AI interviewer that adapts to your responses in real-time",
+    description: "Experience realistic interview scenarios with our advanced AI interviewer",
     icon: <Brain className="w-16 h-16" />,
     features: [
-      "Dynamic question adaptation",
-      "Emotion & sentiment analysis",
-      "Voice tone feedback",
-      "Body language insights"
+      "Dynamic question generation",
+      "Real-time emotion analysis",
+      "Voice-enabled interactions",
+      "Instant feedback system"
     ],
   },
   {
-    title: "Technical Assessments",
-    description: "Smart technical evaluation powered by AI code analysis",
-    icon: <Code2 className="w-16 h-16" />,
+    title: "Performance Analytics",
+    description: "Comprehensive analysis of your interview performance",
+    icon: <LineChart className="w-16 h-16" />,
     features: [
-      "Real-time code analysis",
-      "Architecture feedback",
-      "Performance optimization tips",
-      "Security vulnerability checks"
+      "Emotion tracking metrics",
+      "Speech pace analysis",
+      "Body language feedback",
+      "Confidence scoring"
     ],
   },
   {
-    title: "Behavioral Interviews",
-    description: "Master behavioral interviews with advanced AI coaching",
-    icon: <Users className="w-16 h-16" />,
+    title: "Interview Preparation",
+    description: "Structured preparation tools to enhance your interview skills",
+    icon: <GraduationCap className="w-16 h-16" />,
     features: [
-      "Response structure analysis",
-      "Cultural fit assessment",
-      "Leadership potential scoring",
-      "Communication style insights"
+      "Company-specific questions",
+      "Industry-focused scenarios",
+      "Practice mode available",
+      "Customizable sessions"
     ],
   },
 ];
@@ -59,175 +61,156 @@ const services = [
 const features = [
   {
     icon: <Brain />,
-    title: "Adaptive Learning System",
-    description: "AI that learns from your responses and adjusts difficulty in real-time",
-  },
-  {
-    icon: <FileVideo />,
-    title: "Video Analysis",
-    description: "Advanced facial expression and body language analysis during interviews",
-  },
-  {
-    icon: <LineChart />,
-    title: "Predictive Analytics",
-    description: "AI-powered insights into your interview performance trends and improvement areas",
+    title: "AI-Powered Questions",
+    description: "Dynamic question generation tailored to your experience and industry",
   },
   {
     icon: <MessageSquare />,
-    title: "Natural Language Processing",
-    description: "Deep analysis of response clarity, relevance, and professional tone",
-  },
-  {
-    icon: <GraduationCap />,
-    title: "Personalized Learning Path",
-    description: "AI-generated custom learning plans based on your performance patterns",
-  },
-  {
-    icon: <Cpu />,
-    title: "Multi-Modal Analysis",
-    description: "Combined analysis of voice, video, and text responses for comprehensive feedback",
-  },
-  {
-    icon: <GitBranch />,
-    title: "Industry Adaptation",
-    description: "Interview scenarios tailored to specific industries and roles",
-  },
-  {
-    icon: <Settings2 />,
-    title: "Skill Gap Analysis",
-    description: "AI-powered identification of skills to develop for target positions",
+    title: "Voice Interaction",
+    description: "Natural voice-based conversation with our AI interviewer",
   },
   {
     icon: <Gauge />,
-    title: "Real-time Coaching",
-    description: "Live AI suggestions for improving responses during practice sessions",
+    title: "Real-time Analysis",
+    description: "Instant feedback on emotions, speech, and body language",
+  },
+  {
+    icon: <FileVideo />,
+    title: "Webcam Integration",
+    description: "Visual analysis for better body language and expression feedback",
+  },
+  {
+    icon: <LineChart />,
+    title: "Performance Metrics",
+    description: "Detailed analytics on confidence, professionalism, and communication",
+  },
+  {
+    icon: <Briefcase />,
+    title: "Company Simulation",
+    description: "Practice interviews tailored to specific companies and roles",
+  },
+  {
+    icon: <Volume2 />,
+    title: "Speech Analysis",
+    description: "Feedback on pace, volume, and clarity of speech",
+  },
+  {
+    icon: <Star />,
+    title: "Scoring System",
+    description: "Comprehensive scoring based on multiple performance factors",
   },
 ];
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
+const sectionClass = "py-24 relative overflow-hidden";
+const gradientBgLight = "bg-gradient-to-b from-white to-gray-50";
+const gradientBgDark = "bg-gradient-to-b from-gray-50 to-white";
+const cardClass = "bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col items-center text-center space-y-4 h-full";
+const iconContainerClass = "w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300";
 
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 },
-};
-
-export const Services = () => {
+const Services = () => {
   return (
-    <Container>
-      <div className="py-12 space-y-16">
-        {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center space-y-4"
-        >
-          <Headings
-            title="Our Services"
-            description="Next-generation interview preparation powered by advanced AI"
-          />
-        </motion.div>
-
-        {/* Main Services */}
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="grid md:grid-cols-3 gap-8"
-        >
-          {services.map((service, index) => (
-            <motion.div key={service.title} variants={item}>
-              <Card className="h-full hover:shadow-lg transition-shadow">
-                <CardContent className="p-6 flex flex-col h-full">
-                  <div className="flex flex-col items-center text-center flex-grow space-y-4">
-                    <div className="text-primary p-4">{service.icon}</div>
-                    <h3 className="text-2xl font-semibold">{service.title}</h3>
-                    <p className="text-muted-foreground">{service.description}</p>
-                    <ul className="space-y-3 w-full">
-                      {service.features.map((feature) => (
-                        <li key={feature} className="flex items-center text-sm">
-                          <Settings2 className="w-4 h-4 mr-2 text-primary flex-shrink-0" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="mt-6 pt-6 border-t">
-                    <Button asChild variant="default" className="w-full" size="lg">
-                      <Link to="/generate">Try Now</Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Features Grid */}
-        <section className="py-12">
+    <div className="w-full">
+      {/* Hero Section */}
+      <section className={`${sectionClass} ${gradientBgLight}`}>
+        <Container>
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center max-w-3xl mx-auto"
           >
-            <h2 className="text-3xl font-bold mb-4">Advanced AI Features</h2>
-            <p className="text-muted-foreground">
-              Cutting-edge technology to transform your interview preparation
+            <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 mb-6">
+              Our Premium Interview Services
+            </h1>
+            <p className="text-xl text-gray-600 mb-8">
+              Elevate your interview preparation with our cutting-edge AI-powered services
             </p>
           </motion.div>
-          <motion.div
-            variants={container}
-            initial="hidden"
-            animate="show"
-            className="grid md:grid-cols-3 gap-8"
-          >
-            {features.map((feature) => (
-              <motion.div key={feature.title} variants={item}>
-                <Card className="h-full hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6 text-center">
-                    <div className="text-primary mb-4">
-                      {React.cloneElement(feature.icon, { className: "w-8 h-8 mx-auto" })}
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                    <p className="text-muted-foreground text-sm">
-                      {feature.description}
-                    </p>
-                  </CardContent>
+        </Container>
+      </section>
+
+      {/* Main Services Section */}
+      <section className={`${sectionClass} ${gradientBgDark}`}>
+        <Container>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {services.map((service, index) => (
+              <motion.div
+                key={service.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="group"
+              >
+                <Card className={cardClass}>
+                  <div className={iconContainerClass}>
+                    {service.icon}
+                  </div>
+                  <h3 className="text-2xl font-semibold text-gray-800">{service.title}</h3>
+                  <p className="text-gray-600">{service.description}</p>
+                  <ul className="space-y-3">
+                    {service.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-center space-x-2">
+                        <Check className="w-5 h-5 text-green-500" />
+                        <span className="text-gray-600">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    className="mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+                    asChild
+                  >
+                    <Link to="/signup">Get Started</Link>
+                  </Button>
                 </Card>
               </motion.div>
             ))}
-          </motion.div>
-        </section>
-
-        {/* CTA Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="text-center py-12 bg-primary/5 rounded-2xl"
-        >
-          <div className="max-w-2xl mx-auto space-y-4">
-            <h2 className="text-3xl font-bold">Experience the Future of Interviews</h2>
-            <p className="text-muted-foreground mb-6">
-              Start your journey with AI-powered interview preparation today
-            </p>
-            <Button asChild size="lg" className="px-8">
-              <Link to="/generate">Begin Your Preparation</Link>
-            </Button>
           </div>
-        </motion.section>
-      </div>
-    </Container>
+        </Container>
+      </section>
+
+      {/* Features Grid Section */}
+      <section className={`${sectionClass} ${gradientBgLight}`}>
+        <Container>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center max-w-3xl mx-auto mb-16"
+          >
+            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 mb-6">
+              Advanced Features
+            </h2>
+            <p className="text-xl text-gray-600">
+              Powered by cutting-edge AI technology to provide comprehensive interview preparation
+            </p>
+          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <Card className="p-6 hover:shadow-lg transition-shadow h-full">
+                  <div className="flex flex-col items-center text-center space-y-4">
+                    <div className="p-3 bg-gradient-to-br from-purple-100 to-purple-200 rounded-full">
+                      {feature.icon}
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800">{feature.title}</h3>
+                    <p className="text-gray-600">{feature.description}</p>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </Container>
+      </section>
+    </div>
   );
 };
 
-export default Services; 
+export default Services;
