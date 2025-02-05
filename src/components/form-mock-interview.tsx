@@ -11,7 +11,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { toast } from "sonner";
 import { Headings } from "./headings";
 import { Button } from "./ui/button";
-import { Loader, Trash2 } from "lucide-react";
+import { Loader, Trash2, Sparkles } from "lucide-react";
 import { Separator } from "./ui/separator";
 import {
   FormControl,
@@ -116,6 +116,47 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
     const cleanedResponse = cleanAiResponse(aiResult.response.text());
 
     return cleanedResponse;
+  };
+
+  const generateJobDescription = async (position: string) => {
+    const prompt = `
+      As an experienced technical recruiter, generate a concise and focused job description for a ${position} position.
+      Format the response in plain text with the following sections:
+      1. A brief overview (2-3 sentences)
+      2. Key Responsibilities (4-5 key points)
+      3. Required Technical Skills (focus on 4-5 most relevant technologies)
+      4. Qualifications (3-4 key points)
+
+      Keep each section short and focused. For technical skills, only include the most relevant and commonly used technologies for the role.
+      Use a clean format without asterisks or bullet points, using simple line breaks and clear section headings.
+      
+      Format example:
+      Position Overview:
+      [2-3 sentences about the role]
+
+      Key Responsibilities:
+      1. [First responsibility]
+      2. [Second responsibility]
+      (and so on...)
+
+      Required Technical Skills:
+      1. [Primary skill category with 2-3 specific technologies]
+      2. [Secondary skill category with 2-3 specific technologies]
+      (and so on...)
+
+      Qualifications:
+      1. [First qualification]
+      2. [Second qualification]
+      (and so on...)
+    `;
+
+    try {
+      const aiResult = await chatSession.sendMessage(prompt);
+      return aiResult.response.text();
+    } catch (error) {
+      console.error('Error generating job description:', error);
+      throw error;
+    }
   };
 
   const onSubmit = async (data: FormData) => {
@@ -227,13 +268,40 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
               <FormItem className="w-full space-y-4">
                 <div className="w-full flex items-center justify-between">
                   <FormLabel>Job Description</FormLabel>
-                  <FormMessage className="text-sm" />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        if (!form.getValues("position")) {
+                          toast.error("Please enter a job position first");
+                          return;
+                        }
+                        try {
+                          setLoading(true);
+                          const description = await generateJobDescription(form.getValues("position"));
+                          field.onChange(description);
+                          toast.success("Job description generated successfully!");
+                        } catch (error) {
+                          toast.error("Failed to generate job description");
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                      disabled={loading}
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Generate
+                    </Button>
+                    <FormMessage className="text-sm" />
+                  </div>
                 </div>
                 <FormControl>
                   <Textarea
-                    className="h-12"
+                    className="min-h-[100px]"
                     disabled={loading}
-                    placeholder="eg:- describle your job role"
+                    placeholder="eg:- describe your job role"
                     {...field}
                     value={field.value || ""}
                   />
