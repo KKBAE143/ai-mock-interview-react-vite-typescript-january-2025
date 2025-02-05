@@ -4,8 +4,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
-import { Loader } from "lucide-react";
+import { Button } from "./ui/button";
+import { ReactNode } from "react";
 
 // assuming the button variants types are something like following
 type ButtonVariant =
@@ -20,8 +20,8 @@ type ButtonVariant =
 
 interface TooltipButtonProps {
   content: string;
-  icon: React.ReactNode;
-  onClick: () => void;
+  icon: ReactNode;
+  onClick?: () => void;
   buttonVariant?: ButtonVariant;
   buttonClassName?: string;
   delay?: number;
@@ -42,14 +42,13 @@ export const TooltipButton = ({
   return (
     <TooltipProvider delayDuration={delay}>
       <Tooltip>
-        <TooltipTrigger
-          className={disbaled ? "cursor-not-allowed" : "cursor-pointer"}
-        >
+        <TooltipTrigger asChild>
           <Button
-            size={"icon"}
-            disabled={disbaled}
+            type="button"
             variant={buttonVariant}
-            className={buttonClassName}
+            size="icon"
+            disabled={disbaled}
+            className={`${disbaled ? "cursor-not-allowed" : "cursor-pointer"} ${buttonClassName} hover:bg-transparent`}
             onClick={onClick}
           >
             {loading ? (
@@ -60,7 +59,7 @@ export const TooltipButton = ({
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{loading ? "Loading..." : content}</p>
+          <p className="text-xs">{loading ? "Loading..." : content}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

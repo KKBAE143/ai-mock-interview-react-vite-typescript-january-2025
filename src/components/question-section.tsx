@@ -8,56 +8,55 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Question } from "@/types";
 import { SUPPORTED_LANGUAGES } from "@/lib/constants";
+import { toast } from "sonner";
+import { textToSpeech } from "@/services/elevenlabs";
 
 interface QuestionSectionProps {
   questions: Question[];
+  language?: string;
 }
 
-export const QuestionSection = ({ questions, language = 'en' }: QuestionSectionProps & { language?: string }) => {
+export const QuestionSection = ({ questions, language = 'en' }: QuestionSectionProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isWebCam, setIsWebCam] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
+  const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
   const navigate = useNavigate();
   const { interviewId } = useParams();
 
-  const [currentSpeech, setCurrentSpeech] =
-    useState<SpeechSynthesisUtterance | null>(null);
-
-  const handlePlayQuestion = (qst: string) => {
-    if (isPlaying && currentSpeech) {
-      // stop the speech if already playing
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
-      setCurrentSpeech(null);
-    } else {
-      if ("speechSynthesis" in window) {
-        const speech = new SpeechSynthesisUtterance(qst);
-        
-        // Set the language for speech synthesis
-        speech.lang = language;
-
-        // Get available voices
-        const voices = window.speechSynthesis.getVoices();
-        
-        // Try to find a voice for the selected language
-        const voice = voices.find(v => v.lang.startsWith(language)) || 
-                     voices.find(v => v.lang.startsWith('en')); // fallback to English
-        
-        if (voice) {
-          speech.voice = voice;
-        }
-
-        window.speechSynthesis.speak(speech);
-        setIsPlaying(true);
-        setCurrentSpeech(speech);
-
-        // handle the speech end
-        speech.onend = () => {
-          setIsPlaying(false);
-          setCurrentSpeech(null);
-        };
+  const handlePlayQuestion = async (qst: string) => {
+    try {
+      if (isPlaying && audioRef) {
+        audioRef.pause();
+        audioRef.currentTime = 0;
+        setIsPlaying(false);
+        return;
       }
+
+      setIsPlaying(true);
+      const audioBlob = await textToSpeech(qst, showTranslation ? language : 'en');
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      const audio = new Audio(audioUrl);
+      setAudioRef(audio);
+      
+      audio.onended = () => {
+        setIsPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      audio.onerror = () => {
+        setIsPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+        toast.error("Failed to play audio. Please try again.");
+      };
+
+      await audio.play();
+    } catch (error) {
+      console.error('Speech playback error:', error);
+      setIsPlaying(false);
+      toast.error("Failed to generate speech. Please try again.");
     }
   };
 
