@@ -31,6 +31,8 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "@/config/firebase.config";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { SUPPORTED_LANGUAGES } from "@/lib/constants";
 
 interface FormMockInterviewProps {
   initialData: Interview | null;
@@ -46,6 +48,7 @@ const formSchema = z.object({
     .number()
     .min(0, "Experience cannot be empty or negative"),
   techStack: z.string().min(1, "Tech stack must be at least a character"),
+  language: z.string().default('en')
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -53,7 +56,10 @@ type FormData = z.infer<typeof formSchema>;
 export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData || {},
+    defaultValues: {
+      ...initialData || {},
+      language: 'en'
+    },
   });
 
   const { isValid, isSubmitting } = form.formState;
@@ -95,11 +101,19 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
   };
 
   const generateAiResponse = async (data: FormData) => {
+    const targetLanguage = SUPPORTED_LANGUAGES.find(lang => lang.code === data.language)?.name || 'English';
+    
     const prompt = `
-        As an experienced prompt engineer, generate a JSON array containing 5 technical interview questions along with detailed answers based on the following job information. Each object in the array should have the fields "question" and "answer", formatted as follows:
+        As an experienced prompt engineer and professional translator, generate a JSON array containing 5 technical interview questions along with detailed answers based on the following job information. Each object in the array should have the fields "question", "answer", and their translations. The translations must be accurate and natural in the target language.
 
+        Format as follows:
         [
-          { "question": "<Question text>", "answer": "<Answer text>" },
+          {
+            "question": "<Question text in English>",
+            "answer": "<Answer text in English>",
+            "questionTranslated": "<Question text in ${targetLanguage}>",
+            "answerTranslated": "<Answer text in ${targetLanguage}>"
+          },
           ...
         ]
 
@@ -108,9 +122,19 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
         - Job Description: ${data?.description}
         - Years of Experience Required: ${data?.experience}
         - Tech Stacks: ${data?.techStack}
+        - Target Language: ${targetLanguage}
 
-        The questions should assess skills in ${data?.techStack} development and best practices, problem-solving, and experience handling complex requirements. Please format the output strictly as an array of JSON objects without any additional labels, code blocks, or explanations. Return only the JSON array with questions and answers.
-        `;
+        Requirements:
+        1. Questions should assess skills in ${data?.techStack} development, best practices, and problem-solving
+        2. Translations must be culturally appropriate and use proper technical terminology in the target language
+        3. If the target language is English, set questionTranslated and answerTranslated the same as question and answer
+        4. Ensure translations maintain the technical accuracy of the original content
+        5. Use proper script and characters for the target language
+        6. Keep the technical terms in English but translate the surrounding context naturally
+
+        Please format the output strictly as an array of JSON objects without any additional labels, code blocks, or explanations.
+        Return only the JSON array with questions, answers, and their accurate translations.
+    `;
 
     const aiResult = await chatSession.sendMessage(prompt);
     const cleanedResponse = cleanAiResponse(aiResult.response.text());
@@ -237,7 +261,7 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
       <FormProvider {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="w-full p-8 rounded-lg flex-col flex items-start justify-start gap-6 shadow-md "
+          className="w-full p-8 rounded-lg flex-col flex items-start justify-start gap-6 shadow-md"
         >
           <FormField
             control={form.control}
@@ -351,6 +375,37 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
                     value={field.value || ""}
                   />
                 </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="language"
+            render={({ field }) => (
+              <FormItem className="w-full space-y-4">
+                <div className="w-full flex items-center justify-between">
+                  <FormLabel>Interview Language</FormLabel>
+                  <FormMessage className="text-sm" />
+                </div>
+                <Select
+                  disabled={loading}
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Select Language" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {SUPPORTED_LANGUAGES.map((language) => (
+                      <SelectItem key={language.code} value={language.code}>
+                        {language.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormItem>
             )}
           />

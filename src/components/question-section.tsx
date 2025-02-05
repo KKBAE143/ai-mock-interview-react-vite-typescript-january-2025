@@ -2,18 +2,21 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { TooltipButton } from "./tooltip-button";
-import { Volume2, VolumeX, CheckCircle2 } from "lucide-react";
+import { Volume2, VolumeX, CheckCircle2, Globe } from "lucide-react";
 import { RecordAnswer } from "./record-answer";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "./ui/button";
+import { Question } from "@/types";
+import { SUPPORTED_LANGUAGES } from "@/lib/constants";
 
 interface QuestionSectionProps {
-  questions: { question: string; answer: string }[];
+  questions: Question[];
 }
 
-export const QuestionSection = ({ questions }: QuestionSectionProps) => {
+export const QuestionSection = ({ questions, language = 'en' }: QuestionSectionProps & { language?: string }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isWebCam, setIsWebCam] = useState(false);
+  const [showTranslation, setShowTranslation] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const { interviewId } = useParams();
@@ -30,6 +33,21 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
     } else {
       if ("speechSynthesis" in window) {
         const speech = new SpeechSynthesisUtterance(qst);
+        
+        // Set the language for speech synthesis
+        speech.lang = language;
+
+        // Get available voices
+        const voices = window.speechSynthesis.getVoices();
+        
+        // Try to find a voice for the selected language
+        const voice = voices.find(v => v.lang.startsWith(language)) || 
+                     voices.find(v => v.lang.startsWith('en')); // fallback to English
+        
+        if (voice) {
+          speech.voice = voice;
+        }
+
         window.speechSynthesis.speak(speech);
         setIsPlaying(true);
         setCurrentSpeech(speech);
@@ -55,6 +73,18 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
 
   return (
     <div className="w-full min-h-96 border rounded-md p-4">
+      <div className="flex justify-end mb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowTranslation(!showTranslation)}
+          className="flex items-center gap-2"
+        >
+          <Globe className="w-4 h-4" />
+          {showTranslation ? "Show Original" : "Show Translation"}
+        </Button>
+      </div>
+
       <Tabs
         defaultValue={questions[0]?.question}
         className="w-full space-y-12"
@@ -80,7 +110,7 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
         {questions?.map((tab, i) => (
           <TabsContent key={i} value={tab.question}>
             <p className="text-base text-left tracking-wide text-neutral-500">
-              {tab.question}
+              {showTranslation ? tab.questionTranslated : tab.question}
             </p>
 
             <div className="w-full flex items-center justify-end">
@@ -93,12 +123,15 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
                     <Volume2 className="min-w-5 min-h-5 text-muted-foreground" />
                   )
                 }
-                onClick={() => handlePlayQuestion(tab.question)}
+                onClick={() => handlePlayQuestion(showTranslation ? tab.questionTranslated : tab.question)}
               />
             </div>
 
             <RecordAnswer
-              question={tab}
+              question={{
+                question: showTranslation ? tab.questionTranslated : tab.question,
+                answer: showTranslation ? tab.answerTranslated : tab.answer
+              }}
               isWebCam={isWebCam}
               setIsWebCam={setIsWebCam}
               onAnswerSaved={() => handleQuestionAnswered(tab.question)}

@@ -14,11 +14,12 @@ export interface Interview {
   position: string;
   description: string;
   experience: number;
-  userId: string;
   techStack: string;
-  questions: { question: string; answer: string }[];
-  createdAt: Timestamp;
-  updateAt: Timestamp;
+  questions: Question[];
+  language: string;
+  userId: string;
+  createdAt?: any;
+  updatedAt?: any;
 }
 
 export interface UserAnswer {
@@ -32,4 +33,11 @@ export interface UserAnswer {
   userId: string;
   createdAt: Timestamp;
   updateAt: Timestamp;
+}
+
+export interface Question {
+  question: string;
+  answer: string;
+  questionTranslated: string;
+  answerTranslated: string;
 }
