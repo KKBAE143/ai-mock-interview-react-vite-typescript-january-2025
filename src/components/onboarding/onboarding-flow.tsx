@@ -296,13 +296,29 @@ export function OnboardingFlow() {
           </form>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentStep === 0 || isSubmitting}
-          >
-            Previous
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={currentStep === 0 || isSubmitting}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setOnboardingComplete(true);
+                navigate(returnPath);
+                toast({
+                  title: "Onboarding skipped",
+                  description: "You can always update your preferences later in settings.",
+                });
+              }}
+              disabled={isSubmitting}
+            >
+              Skip
+            </Button>
+          </div>
           {currentStep === steps.length - 1 ? (
             <Button 
               type="submit" 
