@@ -144,34 +144,39 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
 
   const generateJobDescription = async (position: string) => {
     const prompt = `
-      As an experienced technical recruiter, generate a concise and focused job description for a ${position} position.
-      Format the response in plain text with the following sections:
-      1. A brief overview (2-3 sentences)
-      2. Key Responsibilities (4-5 key points)
-      3. Required Technical Skills (focus on 4-5 most relevant technologies)
-      4. Qualifications (3-4 key points)
-
-      Keep each section short and focused. For technical skills, only include the most relevant and commonly used technologies for the role.
-      Use a clean format without asterisks or bullet points, using simple line breaks and clear section headings.
+      As a professional technical recruiter, create a polished job description for a ${position} position.
+      The description should be well-structured and easy to read.
       
-      Format example:
+      Use the following format, maintaining consistent spacing and professional tone:
+      
       Position Overview:
-      [2-3 sentences about the role]
+      [Write a compelling 2-3 sentence overview of the role, focusing on impact and opportunity]
 
       Key Responsibilities:
-      1. [First responsibility]
-      2. [Second responsibility]
-      (and so on...)
+      • [Action verb] + key responsibility with impact
+      • [Action verb] + key responsibility with impact
+      • [Action verb] + key responsibility with impact
+      • [Action verb] + key responsibility with impact
 
-      Required Technical Skills:
-      1. [Primary skill category with 2-3 specific technologies]
-      2. [Secondary skill category with 2-3 specific technologies]
-      (and so on...)
+      Technical Requirements:
+      Frontend:
+      • [List 2-3 primary frontend technologies]
+      
+      Backend:
+      • [List 2-3 primary backend technologies]
+      
+      Additional Technologies:
+      • [List 2-3 relevant tools/platforms]
 
-      Qualifications:
-      1. [First qualification]
-      2. [Second qualification]
-      (and so on...)
+      Required Qualifications:
+      • [Education requirement]
+      • [Years of experience]
+      • [Key technical expertise]
+      • [Soft skills]
+
+      Format the output with proper spacing, bullet points (•), and clear section headings.
+      Keep technical terms in their original form (e.g., React.js, Node.js).
+      Focus on clarity and professionalism.
     `;
 
     try {
@@ -291,7 +296,7 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
             render={({ field }) => (
               <FormItem className="w-full space-y-4">
                 <div className="w-full flex items-center justify-between">
-                  <FormLabel>Job Description</FormLabel>
+                  <FormLabel className="text-lg font-semibold">Job Description</FormLabel>
                   <div className="flex items-center gap-2">
                     <Button
                       type="button"
@@ -314,20 +319,26 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
                         }
                       }}
                       disabled={loading}
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-none shadow-md hover:shadow-lg transition-all duration-200"
                     >
                       <Sparkles className="w-4 h-4 mr-2" />
-                      Generate
+                      Generate Professional Description
                     </Button>
                     <FormMessage className="text-sm" />
                   </div>
                 </div>
                 <FormControl>
                   <Textarea
-                    className="min-h-[100px]"
+                    className="min-h-[400px] p-4 text-base leading-relaxed font-[system-ui] resize-y"
                     disabled={loading}
-                    placeholder="eg:- describe your job role"
+                    placeholder="A professional job description will be generated here..."
                     {...field}
                     value={field.value || ""}
+                    style={{
+                      whiteSpace: 'pre-line',
+                      lineHeight: '1.6',
+                      fontFamily: 'system-ui, -apple-system, sans-serif'
+                    }}
                   />
                 </FormControl>
               </FormItem>
